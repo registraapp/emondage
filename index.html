@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Émondage — audit de coûts cloud et Kubernetes à prix fixe</title>
+<meta name="description" content="Un audit de votre facture AWS, GCP ou Azure et de vos clusters Kubernetes, livré en 10 jours, à 990 € HT. Si les économies identifiées ne dépassent pas deux fois ce prix sur un an, l'audit est remboursé.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7F2; --ink:#1E2A1F; --soft:#56634F; --rule:#D3D8CB;
+    --moss:#3F6B3A; --moss-tint:#E3EBDC; --cut:#A4462B; --focus:#2C5FD9;
+    --serif:"Fraunces",Georgia,serif; --sans:"Public Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  a{color:var(--ink)}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+  header .wrap{display:flex;justify-content:space-between;align-items:baseline;padding:24px 20px;border-bottom:1px solid var(--rule)}
+  .brand{font-family:var(--serif);font-weight:650;font-size:24px;text-decoration:none}
+  header nav a{font-weight:500;text-decoration:none;border-bottom:2px solid var(--moss)}
+
+  .hero{padding:72px 0 56px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:end}
+  h1{font-family:var(--serif);font-weight:650;font-size:clamp(34px,5vw,54px);line-height:1.08;letter-spacing:-.015em;margin:0 0 20px}
+  .lede{font-size:19px;color:var(--soft);margin:0 0 28px;max-width:52ch}
+  .btn{display:inline-block;background:var(--moss);color:#fff;text-decoration:none;font-weight:600;padding:14px 22px;border-radius:4px;border:0;font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:#335a2f}
+
+  /* La facture élaguée : l'élément mémorable de la page */
+  .bill{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:22px 24px;font-variant-numeric:tabular-nums}
+  .bill h2{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--soft);margin:0 0 12px}
+  .bill table{width:100%;border-collapse:collapse;font-size:15px}
+  .bill td{padding:7px 0;border-bottom:1px dashed var(--rule)}
+  .bill td:last-child{text-align:right}
+  .bill tr.cut td{color:var(--soft)}
+  .bill tr.cut td:first-child{text-decoration:line-through;text-decoration-color:var(--cut);text-decoration-thickness:2px}
+  .bill tr.cut td:last-child{color:var(--cut);font-weight:600}
+  .bill tfoot td{border:0;padding-top:12px;font-weight:600}
+  .bill small{display:block;margin-top:10px;color:var(--soft);font-size:13px}
+
+  section{padding:56px 0;border-top:1px solid var(--rule)}
+  h2.s{font-family:var(--serif);font-weight:650;font-size:30px;line-height:1.2;margin:0 0 10px}
+  .sub{color:var(--soft);max-width:62ch;margin:0 0 28px}
+
+  .offers{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:20px}
+  .offer{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:24px}
+  .offer.main{border:2px solid var(--moss);background:var(--moss-tint)}
+  .offer h3{font-family:var(--serif);font-size:22px;margin:0 0 4px}
+  .offer .price{font-size:26px;font-weight:600;margin:6px 0 12px}
+  .offer .price span{font-size:15px;font-weight:400;color:var(--soft)}
+  .offer ul{padding-left:18px;margin:0}
+  .offer li{margin-bottom:6px}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;max-width:720px}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 22px 52px}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;border:2px solid var(--moss);display:grid;place-items:center;font-weight:600;color:var(--moss)}
+  ol.steps strong{display:block}
+
+  .checks{columns:2;column-gap:40px;padding-left:18px;max-width:820px}
+  .checks li{break-inside:avoid;margin-bottom:8px}
+
+  .guarantee{background:#fff;border-left:5px solid var(--moss);padding:22px 26px;max-width:760px;border-radius:0 6px 6px 0}
+  .guarantee p{margin:0}
+
+  form{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:26px;max-width:620px}
+  label{display:block;font-weight:500;margin-bottom:6px}
+  input,select,textarea{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid #B9C2AF;border-radius:4px;background:#fff;color:var(--ink);margin-bottom:16px}
+  .fine{font-size:14px;color:var(--soft)}
+  .thanks{display:none;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:26px;max-width:620px}
+
+  footer{border-top:1px solid var(--rule);padding:30px 0 48px;color:var(--soft);font-size:14px}
+
+  @media (max-width:860px){
+    .hero{grid-template-columns:1fr;padding:44px 0 36px}
+    .offers{grid-template-columns:1fr}
+    .checks{columns:1}
+  }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="#">Émondage</a>
+  <nav><a href="#contact">Demander un audit</a></nav>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Votre facture cloud a des branches mortes.</h1>
+      <p class="lede">Instances surdimensionnées, clusters Kubernetes à moitié vides, volumes orphelins, environnements de test allumés le week-end. Un audit à prix fixe, livré en 10 jours, dit exactement quoi couper et combien vous économisez.</p>
+      <a class="btn" href="#contact">Demander un audit à 990 € HT</a>
+    </div>
+    <div class="bill" aria-label="Exemple de facture cloud après audit">
+      <h2>Exemple de facture mensuelle après audit</h2>
+      <table>
+        <tbody>
+          <tr><td>Nœuds Kubernetes de production</td><td>4 120 €</td></tr>
+          <tr class="cut"><td>Nœuds réservés mais inoccupés</td><td>−1 380 €</td></tr>
+          <tr><td>Bases de données managées</td><td>1 640 €</td></tr>
+          <tr class="cut"><td>Préproduction allumée la nuit et le week-end</td><td>−710 €</td></tr>
+          <tr class="cut"><td>Volumes et instantanés orphelins</td><td>−290 €</td></tr>
+          <tr><td>Transfert de données</td><td>520 €</td></tr>
+        </tbody>
+        <tfoot><tr><td>Économie mensuelle</td><td>2 380 €</td></tr></tfoot>
+      </table>
+      <small>Chiffres d'illustration ; votre rapport contient les vôtres.</small>
+    </div>
+  </div>
+
+  <section>
+    <h2 class="s">Trois façons de travailler ensemble</h2>
+    <p class="sub">On commence toujours par l'audit. La suite n'a de sens que si les économies sont là.</p>
+    <div class="offers">
+      <div class="offer main">
+        <h3>Audit</h3>
+        <div class="price">990 € <span>HT, prix fixe</span></div>
+        <ul>
+          <li>Lecture de 3 mois de facture et de vos clusters</li>
+          <li>Rapport chiffré : chaque économie, son montant, son risque</li>
+          <li>Plan d'action en 10 points, classé par gain</li>
+          <li>Restitution écrite, et un appel de 45 minutes si vous le souhaitez</li>
+        </ul>
+      </div>
+      <div class="offer">
+        <h3>Mise en œuvre</h3>
+        <div class="price">Sur devis</div>
+        <ul>
+          <li>Redimensionnement, autoscaling, instances réservées ou spot</li>
+          <li>Nettoyage et arrêt automatique des environnements hors production</li>
+          <li>Tout passe par votre Terraform et vos pipelines</li>
+        </ul>
+      </div>
+      <div class="offer">
+        <h3>Veille</h3>
+        <div class="price">290 € <span>HT / mois</span></div>
+        <ul>
+          <li>Alerte dès qu'un poste de la facture dérive</li>
+          <li>Revue mensuelle écrite</li>
+          <li>Sans engagement</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="s">Comment se passe l'audit</h2>
+    <ol class="steps">
+      <li><strong>Vous ouvrez un accès en lecture seule.</strong> Un rôle IAM ou un compte de service sans droit d'écriture, et l'export de facturation. Rien n'est modifié chez vous.</li>
+      <li><strong>On analyse pendant 10 jours.</strong> Facture, utilisation réelle des ressources, configuration des clusters et des bases.</li>
+      <li><strong>Vous recevez le rapport.</strong> Chaque recommandation avec son économie mensuelle, son effort et son risque.</li>
+      <li><strong>Vous décidez.</strong> Vous appliquez seuls, ou on le fait ensemble. Vous pouvez aussi vous arrêter là.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 class="s">Ce que l'audit examine</h2>
+    <ul class="checks">
+      <li>AWS, Google Cloud, Azure, IBM Cloud</li>
+      <li>EKS, GKE, AKS, IKS et OpenShift (ROKS)</li>
+      <li>Taille et occupation réelle des nœuds et des pods</li>
+      <li>Requests et limits Kubernetes, autoscaling</li>
+      <li>Instances réservées, plans d'épargne, spot</li>
+      <li>Bases de données et caches managés</li>
+      <li>Stockage, instantanés et volumes orphelins</li>
+      <li>Transferts de données et répartiteurs de charge</li>
+      <li>Environnements hors production et horaires d'allumage</li>
+      <li>Pipelines CI (GitLab, GitHub) et runners</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="s">Remboursé si l'audit ne vaut pas deux fois son prix</h2>
+    <div class="guarantee">
+      <p>Si les économies annuelles identifiées dans le rapport n'atteignent pas 1 980 € HT, l'audit vous est intégralement remboursé. Cette garantie suppose une facture cloud d'au moins 3 000 € par mois ; en dessous, on vous le dit avant de commencer.</p>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2 class="s">Demander un audit</h2>
+    <p class="sub">Réponse sous un jour ouvré, par écrit. Aucun appel commercial non sollicité.</p>
+    <form id="f" method="POST" action="https://formspree.io/f/mzeejnkr">
+      <label for="email">E-mail professionnel</label>
+      <input id="email" name="email" type="email" required autocomplete="email">
+      <label for="societe">Entreprise</label>
+      <input id="societe" name="entreprise" type="text" required autocomplete="organization">
+      <label for="cloud">Fournisseur principal</label>
+      <select id="cloud" name="cloud"><option>AWS</option><option>Google Cloud</option><option>Azure</option><option>IBM Cloud</option><option>Plusieurs</option></select>
+      <label for="montant">Facture cloud mensuelle</label>
+      <select id="montant" name="facture_mensuelle"><option>Moins de 3 000 €</option><option selected>3 000 à 10 000 €</option><option>10 000 à 50 000 €</option><option>Plus de 50 000 €</option></select>
+      <label for="msg">Ce qui vous inquiète (facultatif)</label>
+      <textarea id="msg" name="message" rows="3"></textarea>
+      <input type="hidden" name="source" value="emondage-v1">
+      <input type="hidden" name="_subject" value="Demande d'audit Émondage">
+      <button class="btn" type="submit">Envoyer la demande</button>
+      <p class="fine">Vos informations servent uniquement à répondre à cette demande.</p>
+    </form>
+    <div class="thanks" id="t"><p><strong>Demande envoyée.</strong> Vous recevez une réponse écrite sous un jour ouvré.</p></div>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <p>Émondage — audit et optimisation des coûts cloud et Kubernetes. Contact : bonjour@emondage.fr</p>
+</div></footer>
+
+<script>
+(function(){
+  var f=document.getElementById('f'), t=document.getElementById('t');
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(f.action.indexOf('REMPLACER')>-1){f.style.display='none';t.style.display='block';return;}
+    fetch(f.action,{method:'POST',body:new FormData(f),headers:{Accept:'application/json'}})
+      .then(function(r){ if(r.ok){f.style.display='none';t.style.display='block';} else {alert("La demande n'est pas partie. Réessayez ou écrivez à bonjour@emondage.fr.");} })
+      .catch(function(){alert("La demande n'est pas partie. Vérifiez votre connexion et réessayez.");});
+  });
+})();
+</script>
+</body>
+</html>
