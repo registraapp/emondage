@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Émondage — mise à niveau Kubernetes à prix fixe, avant le support étendu</title>
+<meta name="description" content="Votre cluster EKS, AKS ou GKE paie-t-il déjà le support étendu (six fois le prix normal) ? Simulateur gratuit, et un sprint de mise à niveau à prix fixe, exécuté hors heures ouvrées avec rollback préparé.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7F2; --ink:#1E2A1F; --soft:#56634F; --rule:#D3D8CB;
+    --moss:#3F6B3A; --moss-tint:#E3EBDC; --cut:#A4462B; --cut-tint:#F6E4DD; --amber:#8A6414; --amber-tint:#F5ECD3; --focus:#2C5FD9;
+    --serif:"Fraunces",Georgia,serif; --sans:"Public Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  a{color:var(--ink)}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+  header .wrap{display:flex;justify-content:space-between;align-items:baseline;padding:24px 20px;border-bottom:1px solid var(--rule)}
+  .brand{font-family:var(--serif);font-weight:650;font-size:24px;text-decoration:none}
+  .brand small{font-family:var(--sans);font-weight:400;font-size:14px;color:var(--soft);margin-left:10px}
+  header nav a{font-weight:500;text-decoration:none;border-bottom:2px solid var(--moss);margin-left:18px}
+
+  .hero{padding:64px 0 48px;max-width:780px}
+  h1{font-family:var(--serif);font-weight:650;font-size:clamp(34px,5vw,52px);line-height:1.08;letter-spacing:-.015em;margin:0 0 20px}
+  .lede{font-size:19px;color:var(--soft);margin:0 0 28px;max-width:56ch}
+  .btn{display:inline-block;background:var(--moss);color:#fff;text-decoration:none;font-weight:600;padding:14px 22px;border-radius:4px;border:0;font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:#335a2f}
+  .btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink);padding:12px 20px;margin-left:12px}
+
+  section{padding:56px 0;border-top:1px solid var(--rule)}
+  h2.s{font-family:var(--serif);font-weight:650;font-size:30px;line-height:1.2;margin:0 0 10px}
+  .sub{color:var(--soft);max-width:62ch;margin:0 0 28px}
+
+  /* Simulateur */
+  .sim{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:28px;align-items:start}
+  .panel{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:24px}
+  .panel label{display:block;font-weight:500;margin-bottom:6px}
+  .panel select,.panel input{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid #B9C2AF;border-radius:4px;background:#fff;color:var(--ink);margin-bottom:16px}
+  .verdict{border-radius:6px;padding:24px;border:1px solid var(--rule);background:#fff}
+  .verdict.bad{background:var(--cut-tint);border-color:var(--cut)}
+  .verdict.soon{background:var(--amber-tint);border-color:var(--amber)}
+  .verdict.ok{background:var(--moss-tint);border-color:var(--moss)}
+  .verdict h3{font-family:var(--serif);font-size:24px;margin:0 0 10px;line-height:1.2}
+  .verdict .big{font-size:40px;font-weight:600;font-variant-numeric:tabular-nums;margin:6px 0;letter-spacing:-.01em}
+  .verdict .big span{font-size:16px;font-weight:400;color:var(--soft)}
+  .verdict p{margin:8px 0}
+  .verdict ul{margin:10px 0 0;padding-left:18px}
+  .verdict .fine{font-size:13px;color:var(--soft);margin-top:14px}
+  .timeline{list-style:none;padding:0;margin:14px 0 0;font-size:15px;font-variant-numeric:tabular-nums}
+  .timeline li{display:flex;justify-content:space-between;gap:14px;padding:6px 0;border-bottom:1px dashed var(--rule)}
+  .timeline li:last-child{border:0}
+  .timeline b{font-weight:600}
+
+  .offers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+  .offer{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:24px}
+  .offer.main{border:2px solid var(--moss);background:var(--moss-tint)}
+  .offer h3{font-family:var(--serif);font-size:22px;margin:0 0 4px}
+  .offer .price{font-size:26px;font-weight:600;margin:6px 0 12px}
+  .offer .price span{font-size:15px;font-weight:400;color:var(--soft)}
+  .offer ul{padding-left:18px;margin:0}
+  .offer li{margin-bottom:6px}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;max-width:720px}
+  ol.steps li{counter-increment:s;position:relative;padding:0 0 22px 52px}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;border:2px solid var(--moss);display:grid;place-items:center;font-weight:600;color:var(--moss)}
+  ol.steps strong{display:block}
+
+  .guarantee{background:#fff;border-left:5px solid var(--moss);padding:22px 26px;max-width:760px;border-radius:0 6px 6px 0}
+  .guarantee p{margin:0}
+
+  form{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:26px;max-width:620px}
+  label{display:block;font-weight:500;margin-bottom:6px}
+  input,select,textarea{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid #B9C2AF;border-radius:4px;background:#fff;color:var(--ink);margin-bottom:16px}
+  .fine{font-size:14px;color:var(--soft)}
+  .thanks{display:none;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:26px;max-width:620px}
+
+  footer{border-top:1px solid var(--rule);padding:30px 0 48px;color:var(--soft);font-size:14px}
+
+  @media (max-width:860px){
+    .hero{padding:44px 0 36px}
+    .sim{grid-template-columns:1fr}
+    .offers{grid-template-columns:1fr}
+    .btn.ghost{margin-left:0;margin-top:10px}
+  }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="/">Émondage<small>Kubernetes</small></a>
+  <nav><a href="#simulateur">Simulateur</a><a href="#contact">Demander un sprint</a></nav>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Un cluster resté sur une vieille version coûte six fois plus cher. Chaque mois.</h1>
+    <p class="lede">Sur EKS, AKS et GKE, un cluster qui dépasse la fin du support standard bascule automatiquement en support étendu : environ 438 dollars par mois et par cluster au lieu de 73. Puis vient la mise à niveau forcée, sans votre fenêtre de maintenance. On fait passer vos clusters proprement, à prix fixe, avant l'échéance.</p>
+    <a class="btn" href="#simulateur">Vérifier mes clusters en 20 secondes</a>
+    <a class="btn ghost" href="#offre">Voir l'offre</a>
+  </div>
+
+  <section id="simulateur">
+    <h2 class="s">Votre cluster paie-t-il déjà le support étendu ?</h2>
+    <p class="sub">Gratuit, sans inscription, rien n'est envoyé. Dates officielles des trois fournisseurs, vérifiées le 2 novembre 2026.</p>
+    <div class="sim">
+      <div class="panel">
+        <label for="prov">Fournisseur</label>
+        <select id="prov">
+          <option value="eks">Amazon EKS</option>
+          <option value="aks">Azure AKS</option>
+          <option value="gke">Google GKE (canal Regular)</option>
+        </select>
+        <label for="ver">Version Kubernetes du cluster</label>
+        <select id="ver"></select>
+        <label for="n">Nombre de clusters sur cette version</label>
+        <input id="n" type="number" min="1" max="500" value="1" inputmode="numeric">
+        <p class="fine">Pour connaître la version : <code>kubectl version</code>, ou la console du fournisseur. Les tarifs sont ceux de la liste publique, hors remises.</p>
+      </div>
+      <div class="verdict" id="out" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="offre">
+    <h2 class="s">Le sprint de mise à niveau, à prix fixe par cluster</h2>
+    <p class="sub">Un prix connu avant de commencer, une fenêtre d'exécution convenue, un plan de retour arrière testé avant de toucher à la production. Valable EKS, AKS, GKE, OpenShift et IBM Cloud Kubernetes.</p>
+    <div class="offers">
+      <div class="offer">
+        <h3>Cluster simple</h3>
+        <p class="price">1 500 € HT <span>par cluster</span></p>
+        <ul>
+          <li>Un saut de version mineure</li>
+          <li>Inventaire des API dépréciées (Pluto, kubent)</li>
+          <li>Mise à niveau des nœuds et des add-ons</li>
+          <li>Rapport écrit et checklist pour la prochaine fois</li>
+        </ul>
+      </div>
+      <div class="offer main">
+        <h3>Cluster en retard</h3>
+        <p class="price">2 500 € HT <span>par cluster</span></p>
+        <ul>
+          <li>Deux ou trois sauts de version, enchaînés</li>
+          <li>Répétition complète sur un cluster de staging</li>
+          <li>Correction des manifestes et charts qui cassent</li>
+          <li>Exécution hors heures ouvrées, rollback préparé</li>
+          <li>Rapport et plan de maintien à jour</li>
+        </ul>
+      </div>
+      <div class="offer">
+        <h3>Cluster complexe</h3>
+        <p class="price">3 500 € HT <span>par cluster</span></p>
+        <ul>
+          <li>Service mesh, opérateurs, CRD maison, bases de données dans le cluster</li>
+          <li>Tout ce qui précède, plus migration des composants bloquants</li>
+          <li>Astreinte le jour de la bascule</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine" style="margin-top:14px">À partir de quatre clusters, tarif dégressif sur devis. Les clusters sans environnement de staging font d'abord l'objet d'une répétition sur une copie éphémère, facturée dans le forfait.</p>
+  </section>
+
+  <section>
+    <h2 class="s">Comment se passe le sprint</h2>
+    <ol class="steps">
+      <li><strong>Jour 1 : inventaire.</strong> Accès en lecture seule. Versions, add-ons, API dépréciées, charts Helm, opérateurs, tout ce qui va casser est listé avant de commencer.</li>
+      <li><strong>Jours 2 à 4 : répétition.</strong> La mise à niveau complète est jouée sur le staging ou sur une copie. Chaque correction de manifeste part en pull request chez vous.</li>
+      <li><strong>Jour 5 : bascule.</strong> Dans la fenêtre convenue, hors heures ouvrées. Un plan de retour arrière est écrit et testé avant le premier nœud.</li>
+      <li><strong>Jour 6 : rapport.</strong> Ce qui a été fait, ce qui a été corrigé, la prochaine échéance de votre cluster et la liste pour la passer seul.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 class="s">Si la bascule échoue, vous ne payez pas</h2>
+    <div class="guarantee">
+      <p>Le forfait est facturé à la livraison du rapport, une fois le cluster sur la version cible et vos applications vérifiées. Si on doit revenir en arrière et qu'on n'arrive pas à faire passer le cluster dans la fenêtre convenue, le sprint n'est pas facturé. Aucune donnée n'est exportée, les accès sont révoqués le jour du rapport.</p>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2 class="s">Demander un sprint</h2>
+    <p class="sub">Réponse sous un jour ouvré, par écrit, avec un prix ferme. Aucun appel commercial non sollicité.</p>
+    <form id="f" method="POST" action="https://formspree.io/f/mzeejnkr">
+      <label for="email">E-mail professionnel</label>
+      <input id="email" name="email" type="email" required autocomplete="email">
+      <label for="societe">Entreprise</label>
+      <input id="societe" name="entreprise" type="text" required autocomplete="organization">
+      <label for="cloud">Fournisseur</label>
+      <select id="cloud" name="cloud"><option>Amazon EKS</option><option>Azure AKS</option><option>Google GKE</option><option>OpenShift</option><option>IBM Cloud</option><option>Plusieurs</option></select>
+      <label for="clusters">Clusters à mettre à niveau et versions actuelles</label>
+      <input id="clusters" name="clusters" type="text" placeholder="ex. 2 clusters en 1.31, 1 en 1.33">
+      <label for="msg">Ce qui vous inquiète (facultatif)</label>
+      <textarea id="msg" name="message" rows="3"></textarea>
+      <input type="hidden" name="source" value="emondage-kubernetes-v1">
+      <input type="hidden" name="_subject" value="Demande de sprint Kubernetes Émondage">
+      <button class="btn" type="submit">Envoyer la demande</button>
+      <p class="fine">Vos informations servent uniquement à répondre à cette demande.</p>
+    </form>
+    <div class="thanks" id="t"><p><strong>Demande envoyée.</strong> Vous recevez une réponse écrite avec un prix ferme sous un jour ouvré.</p></div>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <p>Émondage — audit de coûts cloud et mise à niveau Kubernetes. Contact : amine@emondage.fr. Sources des dates et tarifs : calendriers de versions publiés par AWS, Microsoft et Google, consultés le 2 novembre 2026.</p>
+</div></footer>
+
+<script>
+(function(){
+  // Dates officielles (fin du support standard, fin du support étendu). ISO, UTC.
+  // EKS : standard 0,10 $/h, étendu 0,60 $/h. Après la fin du support étendu, mise à niveau automatique.
+  // AKS : standard 0,10 $/h ; après la fin du support communautaire, 60 jours de "platform support" puis mise à niveau automatique ; LTS = tier Premium 0,60 $/h.
+  // GKE : standard 0,10 $/h ; support étendu +0,50 $/h (0,60 $/h au total) ; les canaux sont auto-upgradés avant la fin du support standard.
+  var DATA={
+    eks:{name:"Amazon EKS",std:0.10,ext:0.60,forced:"mise à niveau automatique par AWS",v:{
+      "1.29":["2025-03-23","2026-03-23"],"1.30":["2025-07-23","2026-07-23"],"1.31":["2025-11-26","2026-11-26"],
+      "1.32":["2026-03-23","2027-03-23"],"1.33":["2026-07-29","2027-07-29"],"1.34":["2026-12-02","2027-12-02"],
+      "1.35":["2027-03-27","2028-03-27"],"1.36":["2027-08-02","2028-08-02"],"1.37":["2027-12-01","2028-12-01"]}},
+    aks:{name:"Azure AKS",std:0.10,ext:0.60,forced:"mise à niveau automatique par Azure, hors fenêtre de maintenance, 60 jours après la fin du support",v:{
+      "1.30":["2025-08-22","2026-07-31"],"1.31":["2025-11-01","2026-11-30"],"1.32":["2026-03-31","2027-03-31"],
+      "1.33":["2026-07-31","2027-07-31"],"1.34":["2026-11-30","2027-11-30"],"1.35":["2027-03-31","2028-03-31"],"1.36":["2027-06-30","2028-06-30"]}},
+    gke:{name:"Google GKE",std:0.10,ext:0.60,forced:"mise à niveau automatique par Google avant la fin du support standard, sauf canal Extended",v:{
+      "1.32":["2026-04-27","2027-02-11"],"1.33":["2026-08-12","2027-06-12"],"1.34":["2027-01-25","2027-11-25"],
+      "1.35":["2027-04-11","2028-02-11"],"1.36":["2027-08-09","2028-06-09"]}}
+  };
+  var HOURS=730;
+  var prov=document.getElementById('prov'),ver=document.getElementById('ver'),n=document.getElementById('n'),out=document.getElementById('out');
+  function fmtDate(iso){var d=new Date(iso+"T00:00:00Z");return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});}
+  function fmtUSD(x){return Math.round(x).toLocaleString('fr-FR')+" $";}
+  function days(iso){var d=new Date(iso+"T00:00:00Z"),t=new Date();t=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());return Math.round((d-t)/86400000);}
+  function fill(){
+    var p=DATA[prov.value],keys=Object.keys(p.v),cur=ver.value;
+    ver.innerHTML=keys.map(function(k){return '<option value="'+k+'">'+k+'</option>';}).join('');
+    ver.value=keys.indexOf(cur)>=0?cur:(keys.indexOf("1.31")>=0?"1.31":keys[0]);
+    render();
+  }
+  function render(){
+    var p=DATA[prov.value],k=ver.value,d=p.v[k],c=Math.max(1,parseInt(n.value,10)||1);
+    var dStd=days(d[0]),dExt=days(d[1]);
+    var extMonth=(p.ext-p.std)*HOURS*c, extTotal=p.ext*HOURS*c;
+    var html,cls;
+    if(dExt<=0){
+      cls='bad';
+      html='<h3>'+p.name+' '+k+' : hors support, mise à niveau forcée imminente</h3>'
+        +'<p>Le support étendu de cette version est terminé depuis le '+fmtDate(d[1])+'. Le fournisseur applique une '+p.forced+'. Vous ne choisissez plus ni la date ni la fenêtre.</p>'
+        +'<ul><li>Surcoût payé jusqu\'ici : environ <b>'+fmtUSD(extMonth)+' par mois</b> pour '+c+' cluster'+(c>1?'s':'')+' (support étendu)</li><li>Risque réel : une mise à niveau automatique qui ignore vos PodDisruptionBudgets et vos API dépréciées</li></ul>';
+    } else if(dStd<=0){
+      cls='bad';
+      html='<h3>'+p.name+' '+k+' : vous payez déjà le support étendu</h3>'
+        +'<div class="big">'+fmtUSD(extMonth)+' <span>de surcoût par mois pour '+c+' cluster'+(c>1?'s':'')+'</span></div>'
+        +'<p>Support standard terminé le '+fmtDate(d[0])+'. Le cluster est facturé '+p.ext.toFixed(2).replace('.',',')+' $ de l\'heure au lieu de '+p.std.toFixed(2).replace('.',',')+' $, soit '+fmtUSD(extTotal)+' par mois au total. Sur un an, le surcoût atteint <b>'+fmtUSD(extMonth*12)+'</b>.</p>'
+        +'<ul class="timeline"><li><span>Fin du support étendu, puis '+p.forced+'</span><b>'+fmtDate(d[1])+' ('+dExt+' jours)</b></li></ul>'
+        +'<p>Un sprint à 1 500 à 2 500 € par cluster se rembourse en '+Math.max(1,Math.ceil(2500/(extMonth/c*0.92)))+' mois de surcoût évité.</p>';
+    } else if(dStd<=90){
+      cls='soon';
+      html='<h3>'+p.name+' '+k+' : '+dStd+' jours avant la bascule en support étendu</h3>'
+        +'<p>Le support standard se termine le <b>'+fmtDate(d[0])+'</b>. Passé cette date, chaque cluster coûte '+fmtUSD(extTotal/c)+' par mois au lieu de '+fmtUSD(p.std*HOURS)+', soit <b>'+fmtUSD(extMonth)+' de surcoût mensuel</b> pour '+c+' cluster'+(c>1?'s':'')+'.</p>'
+        +'<ul class="timeline"><li><span>Bascule en support étendu</span><b>'+fmtDate(d[0])+'</b></li><li><span>Fin du support étendu, puis '+p.forced+'</span><b>'+fmtDate(d[1])+'</b></li></ul>'
+        +'<p>C\'est la bonne fenêtre : un sprint tient en une semaine, et vous choisissez le créneau.</p>';
+    } else {
+      cls='ok';
+      html='<h3>'+p.name+' '+k+' : sous support standard</h3>'
+        +'<p>Encore '+dStd+' jours de support standard, jusqu\'au <b>'+fmtDate(d[0])+'</b>. Pas de surcoût aujourd\'hui.</p>'
+        +'<ul class="timeline"><li><span>Bascule en support étendu ('+fmtUSD(extMonth)+' de surcoût mensuel)</span><b>'+fmtDate(d[0])+'</b></li><li><span>Fin du support étendu</span><b>'+fmtDate(d[1])+'</b></li></ul>'
+        +'<p>Mettez un rappel 90 jours avant. Si vous préférez que quelqu\'un s\'en charge, la demande ci-dessous suffit.</p>';
+    }
+    html+='<p class="fine">Tarifs publics par cluster et par heure, 730 heures par mois, hors remises négociées. Les dates viennent des calendriers officiels de chaque fournisseur.</p>';
+    out.className='verdict '+cls;out.innerHTML=html;
+  }
+  prov.addEventListener('change',fill);ver.addEventListener('change',render);n.addEventListener('input',render);
+  fill();
+
+  var f=document.getElementById('f'),t=document.getElementById('t');
+  f.addEventListener('submit',function(e){e.preventDefault();
+    fetch(f.action,{method:'POST',body:new FormData(f),headers:{Accept:'application/json'}})
+    .then(function(r){if(r.ok){f.style.display='none';t.style.display='block';}else{alert("La demande n'est pas partie. Réessayez ou écrivez à amine@emondage.fr.");}})
+    .catch(function(){alert("La demande n'est pas partie. Vérifiez votre connexion et réessayez.");});
+  });
+})();
+</script>
+</body>
+</html>
