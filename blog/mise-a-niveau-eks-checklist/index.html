@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mise à jour EKS : checklist 1.31 → 1.34 sans casse</title>
+<meta name="description" content="Checklist de mise à jour EKS de 1.31 à 1.34 : API dépréciées (pluto, kubent, insights), add-ons, nœuds, Karpenter, PDB, Helm, répétition et retour arrière.">
+<link rel="canonical" href="https://emondage.fr/blog/mise-a-niveau-eks-checklist/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Émondage">
+<meta property="og:title" content="Mise à jour EKS : checklist 1.31 → 1.34 sans casse">
+<meta property="og:description" content="Checklist de mise à jour EKS de 1.31 à 1.34 : API dépréciées (pluto, kubent, insights), add-ons, nœuds, Karpenter, PDB, Helm, répétition et retour arrière.">
+<meta property="og:url" content="https://emondage.fr/blog/mise-a-niveau-eks-checklist/">
+<meta property="article:published_time" content="2026-11-03">
+<meta property="article:modified_time" content="2026-11-03">
+<meta property="article:author" content="Amine">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7F2; --ink:#1E2A1F; --soft:#56634F; --rule:#D3D8CB;
+    --moss:#3F6B3A; --moss-tint:#E3EBDC; --cut:#A4462B; --cut-tint:#F6E4DD; --amber:#8A6414; --amber-tint:#F5ECD3; --focus:#2C5FD9;
+    --serif:"Fraunces",Georgia,serif; --sans:"Public Sans",system-ui,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  a{color:var(--ink)}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+  header .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;padding:24px 20px;border-bottom:1px solid var(--rule)}
+  .brand{font-family:var(--serif);font-weight:650;font-size:24px;text-decoration:none}
+  header nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+  header nav a{font-weight:500;text-decoration:none;border-bottom:2px solid transparent}
+  header nav a:hover,header nav a[aria-current]{border-bottom-color:var(--moss)}
+  .btn{display:inline-block;background:var(--moss);color:#fff;text-decoration:none;font-weight:600;padding:14px 22px;border-radius:4px;border:0;font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:#335a2f}
+
+  .crumbs{list-style:none;display:flex;flex-wrap:wrap;gap:4px 8px;padding:0;margin:28px 0 0;font-size:14px;color:var(--soft)}
+  .crumbs li+li::before{content:"\203A";margin-right:8px;color:var(--soft)}
+  .crumbs a{color:var(--soft)}
+
+  article{max-width:740px;padding:12px 0 56px}
+  h1{font-family:var(--serif);font-weight:650;font-size:clamp(32px,4.6vw,46px);line-height:1.1;letter-spacing:-.015em;margin:18px 0 14px}
+  .meta{font-size:14px;color:var(--soft);margin:0 0 26px}
+  .answer{font-size:19px;background:#fff;border-left:5px solid var(--moss);padding:18px 22px;border-radius:0 6px 6px 0;margin:0 0 30px}
+  .answer p{margin:0}
+  article h2{font-family:var(--serif);font-weight:650;font-size:28px;line-height:1.2;margin:52px 0 12px}
+  article h3{font-size:19px;font-weight:600;line-height:1.35;margin:30px 0 8px}
+  article p,article li{max-width:68ch}
+  article ul,article ol{padding-left:22px}
+  article li{margin-bottom:6px}
+  .toc{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:16px 22px;margin:0 0 10px;font-size:15px}
+  .toc strong{display:block;margin-bottom:4px}
+  .toc ol{margin:0;padding-left:20px}
+  .toc li{margin-bottom:2px}
+
+  .tbl{overflow-x:auto;margin:20px 0 22px;border:1px solid var(--rule);border-radius:6px;background:#fff}
+  table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+  th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  th{font-weight:600;background:var(--moss-tint)}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  tr.hot td{background:var(--cut-tint)}
+  caption{caption-side:bottom;text-align:left;font-size:13px;color:var(--soft);padding:8px 12px}
+
+  pre{background:#1E2A1F;color:#EEF1E8;padding:16px 18px;border-radius:6px;overflow-x:auto;font-size:14px;line-height:1.55;margin:14px 0 20px;max-width:100%}
+  pre code{font-family:var(--mono);font-size:inherit;background:none;padding:0;color:inherit}
+  pre .c{color:#A9B8A0}
+  code{font-family:var(--mono);font-size:.88em}
+  :not(pre)>code{background:var(--moss-tint);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+
+  ul.check{list-style:none;padding:0}
+  ul.check li{position:relative;padding-left:34px;margin-bottom:10px}
+  ul.check li::before{content:"";position:absolute;left:0;top:4px;width:18px;height:18px;border:2px solid var(--moss);border-radius:3px;background:#fff}
+
+  .note{background:var(--amber-tint);border-left:5px solid var(--amber);padding:14px 20px;border-radius:0 6px 6px 0;margin:20px 0}
+  .note p{margin:0}
+  .cta{background:var(--moss-tint);border:2px solid var(--moss);border-radius:6px;padding:24px 26px;margin:44px 0}
+  .cta h2{margin:0 0 8px !important;font-size:24px !important}
+  .cta p{margin:0 0 16px}
+
+  details{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:14px 18px;margin-bottom:10px}
+  summary{font-weight:600;cursor:pointer}
+  details p{margin:10px 0 0}
+
+  .related{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0 0}
+  .related a{display:block;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:16px 18px;text-decoration:none}
+  .related a:hover{border-color:var(--moss)}
+  .related b{display:block;font-family:var(--serif);font-weight:650;font-size:18px;line-height:1.25;margin-bottom:4px}
+  .related span{font-size:14px;color:var(--soft)}
+  .sources{font-size:15px}
+  .sources li{overflow-wrap:anywhere}
+
+  .hub{max-width:780px;padding:12px 0 56px}
+  .hub .lede{font-size:19px;color:var(--soft);margin:0 0 30px;max-width:58ch}
+  .card{display:block;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:22px 24px;margin-bottom:16px;text-decoration:none}
+  .card:hover{border-color:var(--moss)}
+  .card h2{font-family:var(--serif);font-weight:650;font-size:24px;line-height:1.2;margin:0 0 6px}
+  .card p{margin:0 0 8px;color:var(--ink)}
+  .card small{color:var(--soft);font-size:14px}
+
+  footer{border-top:1px solid var(--rule);padding:30px 0 48px;color:var(--soft);font-size:14px}
+
+  @media (max-width:860px){
+    .related{grid-template-columns:1fr}
+  }
+  @media (max-width:480px){
+    body{font-size:16.5px}
+    article h2{font-size:24px}
+    .answer{font-size:17.5px;padding:16px 18px}
+    pre{font-size:13px;padding:14px}
+    th,td{padding:8px 9px}
+  }
+</style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "Article",
+ "headline": "Mise à niveau EKS : la checklist pour passer de 1.31 à 1.34 sans casse",
+ "description": "Checklist de mise à jour EKS de 1.31 à 1.34 : API dépréciées (pluto, kubent, insights), add-ons, nœuds, Karpenter, PDB, Helm, répétition et retour arrière.",
+ "inLanguage": "fr-FR",
+ "datePublished": "2026-11-03",
+ "dateModified": "2026-11-03",
+ "author": {
+  "@type": "Person",
+  "name": "Amine",
+  "jobTitle": "Ingénieur DevOps"
+ },
+ "publisher": {
+  "@type": "Organization",
+  "name": "Émondage",
+  "url": "https://emondage.fr"
+ },
+ "mainEntityOfPage": {
+  "@type": "WebPage",
+  "@id": "https://emondage.fr/blog/mise-a-niveau-eks-checklist/"
+ },
+ "url": "https://emondage.fr/blog/mise-a-niveau-eks-checklist/"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Accueil",
+   "item": "https://emondage.fr/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "Guides",
+   "item": "https://emondage.fr/blog/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 3,
+   "name": "Mise à niveau EKS : la checklist",
+   "item": "https://emondage.fr/blog/mise-a-niveau-eks-checklist/"
+  }
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "Peut-on passer directement d'EKS 1.31 à 1.34 ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Non. EKS n'accepte qu'une version mineure par mise à niveau du plan de contrôle : 1.31 vers 1.32, puis 1.33, puis 1.34. Chaque saut demande de mettre à jour les nœuds et les add-ons avant le suivant."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Combien de temps dure une mise à niveau EKS ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "AWS indique plusieurs minutes pour le plan de contrôle. Le remplacement des nœuds et la mise à jour des add-ons prennent davantage, selon la taille du cluster et les PodDisruptionBudgets : mesurez-le sur un staging avant de fixer la fenêtre."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Peut-on revenir en arrière après une mise à niveau EKS ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Oui depuis juillet 2026, dans les 7 jours, d'une seule version mineure, pour un cluster mis à niveau sur place. Les add-ons et les nœuds non Auto Mode sont à rétrograder séparément. Un cluster mis à niveau d'office en fin de support étendu ne peut pas revenir en arrière."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Les nœuds EKS sont-ils mis à jour avec le plan de contrôle ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Non, sauf en EKS Auto Mode. Les groupes de nœuds managés, les nœuds autogérés et les pods Fargate existants restent sur leur version tant que vous ne les mettez pas à jour."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Comment trouver les API dépréciées avant une mise à niveau Kubernetes ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Combinez pluto pour les manifestes et les releases Helm, kubent pour les objets du cluster, et les upgrade insights EKS (aws eks list-insights) pour les appels réellement observés sur 30 jours."
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="/">Émondage</a>
+  <nav aria-label="Navigation principale"><a href="/blog/" aria-current="page">Guides</a><a href="/">Audit des coûts</a><a href="/kubernetes/">Mise à niveau Kubernetes</a></nav>
+</div></header>
+
+<main class="wrap">
+<nav aria-label="Fil d'Ariane"><ol class="crumbs"><li><a href="/">Accueil</a></li><li><a href="/blog/">Guides</a></li><li aria-current="page">Mise à niveau EKS&nbsp;: la checklist</li></ol></nav>
+<article>
+<h1>Mise à niveau EKS&nbsp;: la checklist pour passer de 1.31 à 1.34 sans casse</h1>
+<p class="meta">Par Amine, ingénieur DevOps · Mis à jour le <time datetime="2026-11-03">3 novembre 2026</time></p>
+<div class="answer"><p>Une mise à niveau EKS se fait une version mineure à la fois&nbsp;: inventaire des API dépréciées et des insights, alignement des nœuds, plan de contrôle, puis nœuds et add-ons, et on recommence pour le saut suivant. Depuis juillet 2026, EKS permet de revenir à la version précédente dans les 7 jours, sous conditions&nbsp;; pour plusieurs sauts d'affilée ou un cluster critique, un cluster bleu/vert reste le filet le plus sûr.</p></div>
+<nav class="toc" aria-label="Sommaire"><strong>Dans ce guide</strong><ol><li><a href="#pourquoi">Pourquoi maintenant</a></li><li><a href="#checklist">La checklist en un coup d'œil</a></li><li><a href="#inventaire">1. Inventaire</a></li><li><a href="#addons">2. Add-ons</a></li><li><a href="#noeuds">3. Nœuds et Karpenter</a></li><li><a href="#pdb">4. PodDisruptionBudgets</a></li><li><a href="#sauts">5. Une version mineure à la fois</a></li><li><a href="#repetition">6. Répétition sur staging</a></li><li><a href="#rollback">7. Stratégie de retour arrière</a></li><li><a href="#helm">8. Charts Helm</a></li><li><a href="#faq">Questions fréquentes</a></li></ol></nav>
+
+<h2 id="pourquoi">Pourquoi maintenant</h2>
+<p>Au 3 novembre 2026, le calendrier EKS laisse peu de marge. La version 1.31 sort du support étendu le 26 novembre 2026, après quoi AWS met à niveau le plan de contrôle d'office, sans préavis. Les versions 1.32 et 1.33 sont déjà en support étendu, facturé 0,60&nbsp;$ par cluster et par heure au lieu de 0,10&nbsp;$. La 1.34 quitte le support standard le 2 décembre 2026. Le détail des coûts est dans notre article sur <a href="/blog/cout-support-etendu-eks/">le coût du support étendu EKS</a>. Pour sortir durablement du tarif étendu, la cible raisonnable est 1.35, voire plus&nbsp;: c'est trois ou quatre sauts pour un cluster en 1.31.</p>
+
+<h2 id="checklist">La checklist en un coup d'œil</h2>
+<ul class="check">
+  <li>Lister les API dépréciées ou supprimées dans les manifestes, les releases Helm et le cluster (pluto, kubent).</li>
+  <li>Lire les upgrade insights EKS et traiter chaque statut <code>ERROR</code> ou <code>WARNING</code>.</li>
+  <li>Vérifier que les nœuds sont sur la même version mineure que le plan de contrôle, et sur une AMI qui existe pour la version cible.</li>
+  <li>Relever les versions compatibles de VPC CNI, CoreDNS, kube-proxy, du pilote EBS CSI et des contrôleurs installés par Helm.</li>
+  <li>Contrôler les PodDisruptionBudgets qui bloqueraient le drainage des nœuds.</li>
+  <li>Vérifier qu'il reste au moins cinq adresses IP libres dans les sous-réseaux du cluster.</li>
+  <li>Jouer la mise à niveau complète sur un cluster de staging, en chronométrant chaque étape.</li>
+  <li>Écrire le plan de retour arrière, et décider avant de commencer&nbsp;: rollback EKS ou bleu/vert.</li>
+  <li>Monter le plan de contrôle d'une version, puis les nœuds, puis les add-ons, puis recommencer.</li>
+  <li>Après la bascule&nbsp;: tests de fumée, mise à jour de <code>kubectl</code> et des pipelines, prochaine échéance dans l'agenda.</li>
+</ul>
+
+<h2 id="inventaire">1. Inventaire&nbsp;: ce qui va casser</h2>
+<h3>API dépréciées</h3>
+<p>Le guide de migration des API dépréciées de Kubernetes est la référence. Dans la plage qui nous intéresse, la version 1.32 a cessé de servir <code>flowcontrol.apiserver.k8s.io/v1beta3</code> pour <code>FlowSchema</code> et <code>PriorityLevelConfiguration</code>&nbsp;; à la date de rédaction, le guide ne liste pas de suppression d'API dans les versions suivantes. Deux outils font l'inventaire&nbsp;:</p>
+<pre><code><span class="c"># Releases Helm installées, comparées à la version cible</span>
+pluto detect-helm -owide --target-versions k8s=v1.34.0
+
+<span class="c"># Manifestes du dépôt (Kustomize, YAML bruts)</span>
+pluto detect-files -d ./deploy --target-versions k8s=v1.34.0
+
+<span class="c"># Objets présents dans le cluster courant (kubeconfig actif)</span>
+kubent</code></pre>
+<p>Pluto lit ce qui est déclaré&nbsp;; kubent interroge le cluster. Les deux s'appuient sur des listes de règles maintenues à la main&nbsp;: un résultat vide n'est pas une preuve, c'est un indice.</p>
+<h3>Upgrade insights EKS</h3>
+<p>EKS analyse lui-même chaque cluster&nbsp;: API dépréciées réellement appelées, décalage de versions entre kubelet et plan de contrôle, compatibilité des add-ons.</p>
+<pre><code>aws eks list-insights --cluster-name mon-cluster \
+  --filter categories=UPGRADE_READINESS
+
+aws eks describe-insight --cluster-name mon-cluster --id &lt;insight-id&gt;</code></pre>
+<p>Deux limites documentées par AWS&nbsp;: les insights se rafraîchissent toutes les 24 heures, et la détection des API dépréciées porte sur une fenêtre glissante de 30 jours. Un client corrigé hier peut donc rester signalé plusieurs semaines&nbsp;; un CronJob mensuel peut ne jamais apparaître.</p>
+<h3>Nœuds et AMI</h3>
+<pre><code>kubectl version
+kubectl get nodes -o wide</code></pre>
+<p>AWS recommande d'aligner les nœuds sur la version du plan de contrôle avant chaque saut. Point bloquant pour la plage 1.31 à 1.34&nbsp;: la 1.32 est la dernière version pour laquelle EKS a publié des AMI Amazon Linux 2, et leur publication s'est arrêtée le 26 novembre 2025. Passer en 1.33 impose donc des nœuds Amazon Linux 2023 ou Bottlerocket. Cette migration de système, avec ses scripts <code>user-data</code> et ses agents, mérite son propre test.</p>
+
+<h2 id="addons">2. Add-ons&nbsp;: VPC CNI, CoreDNS, kube-proxy, EBS CSI</h2>
+<p>Les add-ons EKS ne suivent pas le plan de contrôle. Pour chacun, relevez les versions compatibles avec la version cible&nbsp;:</p>
+<pre><code>aws eks describe-addon-versions --addon-name kube-proxy \
+  --kubernetes-version 1.34 \
+  --query "addons[].addonVersions[].addonVersion" --output text</code></pre>
+<p>Puis, après la mise à niveau du plan de contrôle et des nœuds&nbsp;:</p>
+<pre><code>aws eks update-addon --cluster-name mon-cluster \
+  --addon-name kube-proxy --addon-version &lt;version&gt; \
+  --resolve-conflicts PRESERVE</code></pre>
+<p><code>PRESERVE</code> conserve vos modifications de configuration&nbsp;; <code>OVERWRITE</code> les écrase. Répétez pour <code>vpc-cni</code>, <code>coredns</code> et <code>aws-ebs-csi-driver</code>. Les composants installés hors add-ons, par Helm le plus souvent (AWS Load Balancer Controller, cluster-autoscaler, metrics-server, cert-manager, contrôleur d'ingress), ont leur propre matrice de compatibilité&nbsp;: lisez-la avant le saut, pas après. Le cluster-autoscaler en particulier doit être sur la même version mineure que le cluster.</p>
+
+<h2 id="noeuds">3. Nœuds&nbsp;: groupes managés, Karpenter, Auto Mode</h2>
+<ul>
+  <li><strong>Groupes de nœuds managés</strong>&nbsp;: <code>aws eks update-nodegroup-version --cluster-name mon-cluster --nodegroup-name ng-app</code> remplace les nœuds par vagues, selon la configuration <code>maxUnavailable</code> du groupe, en respectant les PodDisruptionBudgets.</li>
+  <li><strong>Karpenter</strong>&nbsp;: un nœud est considéré en dérive quand la résolution de <code>amiSelectorTerms</code> de son EC2NodeClass donne une autre AMI&nbsp;; Karpenter le remplace alors, en passant par l'API d'éviction, donc en respectant les PDB. Les pods annotés <code>karpenter.sh/do-not-disrupt</code> bloquent ce remplacement. Vérifiez aussi que votre version de Karpenter supporte la version Kubernetes cible.</li>
+  <li><strong>EKS Auto Mode</strong>&nbsp;: les nœuds sont mis à jour automatiquement après le plan de contrôle, en respectant les PDB.</li>
+  <li><strong>Fargate</strong>&nbsp;: les pods existants ne changent pas&nbsp;; ils prennent la nouvelle version au prochain redéploiement.</li>
+</ul>
+
+<h2 id="pdb">4. PodDisruptionBudgets</h2>
+<p>Un PDB mal réglé bloque le drainage et fait échouer une mise à jour de groupe de nœuds. Cherchez ceux qui n'autorisent aucune interruption&nbsp;:</p>
+<pre><code>kubectl get pdb -A</code></pre>
+<p>Une colonne <code>ALLOWED DISRUPTIONS</code> à 0 signale soit un <code>minAvailable</code> égal au nombre de réplicas, soit une application déjà dégradée. Le cas typique&nbsp;: un déploiement à une seule réplique protégé par un PDB <code>minAvailable: 1</code>. Passez-le à deux répliques le temps de la bascule, ou acceptez explicitement l'interruption. Ne supprimez pas les PDB «&nbsp;pour que ça passe&nbsp;»&nbsp;: ils sont là pour la production.</p>
+
+<h2 id="sauts">5. Une version mineure à la fois</h2>
+<p>EKS n'accepte qu'un saut de version mineure par mise à niveau&nbsp;: de 1.31 à 1.34, il faut trois cycles complets. Chaque mise à niveau du plan de contrôle prend «&nbsp;plusieurs minutes&nbsp;» selon AWS, ne peut être ni suspendue ni annulée une fois lancée, et demande jusqu'à cinq adresses IP libres dans les sous-réseaux du cluster.</p>
+<pre><code>aws eks update-cluster-version --name mon-cluster --kubernetes-version 1.32
+aws eks describe-update --name mon-cluster --update-id &lt;update-id&gt;</code></pre>
+<div class="tbl"><table>
+  <thead><tr><th>Saut</th><th>Point d'attention connu</th></tr></thead>
+  <tbody>
+    <tr><td>1.31 → 1.32</td><td>Fin de <code>flowcontrol.apiserver.k8s.io/v1beta3</code>. Dernière version avec des AMI Amazon Linux 2.</td></tr>
+    <tr><td>1.32 → 1.33</td><td>Plus d'AMI Amazon Linux 2&nbsp;: nœuds en AL2023 ou Bottlerocket obligatoires.</td></tr>
+    <tr><td>1.33 → 1.34</td><td>Pas de suppression d'API listée par le guide Kubernetes&nbsp;; relancer insights et pluto quand même.</td></tr>
+    <tr><td>1.34 → 1.35</td><td>Idem&nbsp;; 1.34 quitte le support standard le 2 décembre 2026.</td></tr>
+  </tbody>
+</table></div>
+<p>Entre deux sauts, attendez que les nœuds et les add-ons aient rejoint la nouvelle version et que les tests soient verts. Enchaîner trois plans de contrôle d'affilée en laissant les nœuds en 1.31 est techniquement possible (le kubelet tolère trois versions de retard) mais concentre tout le risque sur la fin.</p>
+
+<h2 id="repetition">6. Répétition sur un cluster de staging</h2>
+<p>La répétition est l'étape qui distingue une mise à niveau tranquille d'une nuit blanche. Elle n'a de valeur que si le staging ressemble à la production&nbsp;: même code d'infrastructure, mêmes charts aux mêmes versions, mêmes add-ons, mêmes types de nœuds. Faute de staging, une copie éphémère créée depuis le même Terraform fait l'affaire. Pendant la répétition&nbsp;:</p>
+<ul>
+  <li>chronométrez chaque étape, pour fixer une fenêtre réaliste&nbsp;;</li>
+  <li>notez chaque correction de manifeste et poussez-la dans le dépôt, pas à la main dans le cluster&nbsp;;</li>
+  <li>lancez les tests de fumée après chaque saut, pas seulement à la fin&nbsp;;</li>
+  <li>testez le retour arrière, au moins une fois.</li>
+</ul>
+<p>Attention&nbsp;: le trafic du staging n'est pas celui de la production. Les insights du cluster de production restent la source pour les API réellement appelées.</p>
+
+<h2 id="rollback">7. Stratégie de retour arrière</h2>
+<h3>Le retour arrière EKS natif</h3>
+<p>Depuis juillet 2026, EKS permet de revenir à la version mineure précédente. Les conditions sont strictes&nbsp;: dans les 7 jours suivant la mise à niveau, d'une seule version, uniquement pour un cluster mis à niveau sur place (pas pour un cluster créé dans sa version actuelle), et jamais après une mise à niveau forcée de fin de support étendu.</p>
+<pre><code>aws eks update-cluster-version --name mon-cluster --kubernetes-version 1.33</code></pre>
+<p>Ce que le retour arrière ne fait pas&nbsp;: il ne touche ni aux add-ons, à rétrograder vous-même, ni aux groupes de nœuds managés ou autogérés, à rétrograder <em>avant</em> le plan de contrôle. Seul Auto Mode rétrograde ses nœuds automatiquement&nbsp;; Fargate ne le permet pas. Revenir vers une version en support étendu exige de repasser la politique en <code>EXTENDED</code> et relance la facturation à 0,60&nbsp;$.</p>
+<h3>Le cluster bleu/vert</h3>
+<p>Au-delà de 7 jours, pour plusieurs sauts d'un coup ou pour un cluster dont la panne coûte cher, la méthode sûre reste le cluster neuf&nbsp;: on crée le cluster cible dans la nouvelle version, on y déploie tout par GitOps ou par les pipelines, on bascule le trafic progressivement (DNS pondéré, répartiteur de charge), et on garde l'ancien cluster quelques jours. Le prix&nbsp;: un double cluster pendant la transition, et un vrai travail sur les données si des bases ou des volumes persistants vivent dans le cluster.</p>
+
+<h2 id="helm">8. Charts Helm</h2>
+<pre><code>helm list -A
+pluto detect-helm -owide --target-versions k8s=v1.34.0</code></pre>
+<p>Pour chaque release, vérifiez que la version du chart supporte la cible&nbsp;: beaucoup de charts déclarent une contrainte <code>kubeVersion</code> dans leur <code>Chart.yaml</code> et refusent de s'installer hors de cette plage. Mettez les charts à jour <em>avant</em> le saut qui supprime l'API qu'ils utilisent. Si une release a été installée avec une API désormais supprimée, Helm ne peut plus la mettre à jour&nbsp;; le plugin <code>helm-mapkubeapis</code> réécrit les métadonnées de la release pour débloquer la situation.</p>
+<p>Après la bascule&nbsp;: mettez à jour <code>kubectl</code> (au plus une version mineure d'écart avec le cluster), les images de CI qui l'embarquent, et notez la prochaine échéance. Un cluster en 1.35 quitte le support standard le 27 mars 2027.</p>
+
+<div class="cta">
+<h2>Un sprint à prix fixe, rollback préparé</h2>
+<p>Si vous préférez que quelqu'un s'en charge&nbsp;: inventaire, répétition sur staging, bascule hors heures ouvrées, rapport. 1&nbsp;500&nbsp;€&nbsp;HT pour un saut simple, 2&nbsp;500&nbsp;€&nbsp;HT pour un cluster en retard de deux ou trois versions, 3&nbsp;500&nbsp;€&nbsp;HT pour un cluster complexe. Non facturé si la bascule échoue dans la fenêtre convenue.</p>
+<a class="btn" href="/kubernetes/">Voir l'offre de mise à niveau</a>
+</div>
+<p>Une mise à niveau est aussi le bon moment pour regarder la facture&nbsp;: voir <a href="/blog/reduire-facture-aws-startup/">les dix économies AWS les plus fréquentes</a>.</p>
+<h2 id="faq">Questions fréquentes</h2>
+<details><summary>Peut-on passer directement d'EKS 1.31 à 1.34&nbsp;?</summary><p>Non. EKS n'accepte qu'une version mineure par mise à niveau du plan de contrôle&nbsp;: 1.31 vers 1.32, puis 1.33, puis 1.34. Chaque saut demande de mettre à jour les nœuds et les add-ons avant le suivant.</p></details>
+<details><summary>Combien de temps dure une mise à niveau EKS&nbsp;?</summary><p>AWS indique plusieurs minutes pour le plan de contrôle. Le remplacement des nœuds et la mise à jour des add-ons prennent davantage, selon la taille du cluster et les PodDisruptionBudgets&nbsp;: mesurez-le sur un staging avant de fixer la fenêtre.</p></details>
+<details><summary>Peut-on revenir en arrière après une mise à niveau EKS&nbsp;?</summary><p>Oui depuis juillet 2026, dans les 7 jours, d'une seule version mineure, pour un cluster mis à niveau sur place. Les add-ons et les nœuds non Auto Mode sont à rétrograder séparément. Un cluster mis à niveau d'office en fin de support étendu ne peut pas revenir en arrière.</p></details>
+<details><summary>Les nœuds EKS sont-ils mis à jour avec le plan de contrôle&nbsp;?</summary><p>Non, sauf en EKS Auto Mode. Les groupes de nœuds managés, les nœuds autogérés et les pods Fargate existants restent sur leur version tant que vous ne les mettez pas à jour.</p></details>
+<details><summary>Comment trouver les API dépréciées avant une mise à niveau Kubernetes&nbsp;?</summary><p>Combinez pluto pour les manifestes et les releases Helm, kubent pour les objets du cluster, et les upgrade insights EKS (aws eks list-insights) pour les appels réellement observés sur 30 jours.</p></details>
+<h2 id="sources">Sources</h2>
+<ol class="sources"><li><a href="https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html" rel="noopener">Update existing cluster to new Kubernetes version</a> — AWS, procédure et prérequis</li><li><a href="https://docs.aws.amazon.com/eks/latest/userguide/rollback-cluster.html" rel="noopener">Roll back a cluster to a previous Kubernetes version</a> — AWS, conditions du retour arrière</li><li><a href="https://docs.aws.amazon.com/cli/latest/reference/eks/list-insights.html" rel="noopener">aws eks list-insights</a> — Référence AWS CLI</li><li><a href="https://kubernetes.io/docs/reference/using-api/deprecation-guide/" rel="noopener">Deprecated API Migration Guide</a> — kubernetes.io</li><li><a href="https://docs.aws.amazon.com/eks/latest/userguide/eks-ami-deprecation-faqs.html" rel="noopener">Guide to EKS AL2 and AL2-Accelerated AMIs transition</a> — AWS, fin des AMI Amazon Linux 2</li><li><a href="https://karpenter.sh/docs/concepts/disruption/" rel="noopener">Karpenter&nbsp;: Disruption</a> — Documentation Karpenter, dérive et PDB</li></ol>
+<h2>À lire aussi</h2>
+<div class="related"><a href="/blog/cout-support-etendu-eks/"><b>Coût du support étendu EKS</b><span>0,10&nbsp;$ ou 0,60&nbsp;$ de l'heure&nbsp;: le calcul pour 1, 3 et 10 clusters, le calendrier de fin de support et comment désactiver la bascule.</span></a><a href="/blog/reduire-facture-aws-startup/"><b>Réduire la facture AWS d'une startup</b><span>Les dix économies les plus fréquentes et la commande pour repérer chacune.</span></a></div>
+</article>
+</main>
+
+<footer><div class="wrap">
+  <p>Émondage — <a href="/">audit des coûts cloud à prix fixe</a>, <a href="/kubernetes/">mise à niveau Kubernetes à prix fixe</a>, <a href="/blog/">guides</a>. Contact&nbsp;: amine@emondage.fr</p>
+</div></footer>
+</body>
+</html>

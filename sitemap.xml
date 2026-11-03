@@ -2,4 +2,8 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://emondage.fr/</loc><lastmod>2026-11-03</lastmod></url>
   <url><loc>https://emondage.fr/kubernetes/</loc><lastmod>2026-11-03</lastmod></url>
+  <url><loc>https://emondage.fr/blog/</loc><lastmod>2026-11-03</lastmod></url>
+  <url><loc>https://emondage.fr/blog/cout-support-etendu-eks/</loc><lastmod>2026-11-03</lastmod></url>
+  <url><loc>https://emondage.fr/blog/mise-a-niveau-eks-checklist/</loc><lastmod>2026-11-03</lastmod></url>
+  <url><loc>https://emondage.fr/blog/reduire-facture-aws-startup/</loc><lastmod>2026-11-03</lastmod></url>
 </urlset>

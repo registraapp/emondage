@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Réduire sa facture AWS en startup : 10 économies concrètes</title>
+<meta name="description" content="Réduire la facture AWS d&#x27;une startup : dix économies fréquentes (rightsizing, NAT, gp3, Savings Plans, Graviton, logs, Kubernetes) et comment repérer chacune.">
+<link rel="canonical" href="https://emondage.fr/blog/reduire-facture-aws-startup/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Émondage">
+<meta property="og:title" content="Réduire sa facture AWS en startup : 10 économies concrètes">
+<meta property="og:description" content="Réduire la facture AWS d&#x27;une startup : dix économies fréquentes (rightsizing, NAT, gp3, Savings Plans, Graviton, logs, Kubernetes) et comment repérer chacune.">
+<meta property="og:url" content="https://emondage.fr/blog/reduire-facture-aws-startup/">
+<meta property="article:published_time" content="2026-11-03">
+<meta property="article:modified_time" content="2026-11-03">
+<meta property="article:author" content="Amine">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7F2; --ink:#1E2A1F; --soft:#56634F; --rule:#D3D8CB;
+    --moss:#3F6B3A; --moss-tint:#E3EBDC; --cut:#A4462B; --cut-tint:#F6E4DD; --amber:#8A6414; --amber-tint:#F5ECD3; --focus:#2C5FD9;
+    --serif:"Fraunces",Georgia,serif; --sans:"Public Sans",system-ui,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  a{color:var(--ink)}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+  header .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;padding:24px 20px;border-bottom:1px solid var(--rule)}
+  .brand{font-family:var(--serif);font-weight:650;font-size:24px;text-decoration:none}
+  header nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+  header nav a{font-weight:500;text-decoration:none;border-bottom:2px solid transparent}
+  header nav a:hover,header nav a[aria-current]{border-bottom-color:var(--moss)}
+  .btn{display:inline-block;background:var(--moss);color:#fff;text-decoration:none;font-weight:600;padding:14px 22px;border-radius:4px;border:0;font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:#335a2f}
+
+  .crumbs{list-style:none;display:flex;flex-wrap:wrap;gap:4px 8px;padding:0;margin:28px 0 0;font-size:14px;color:var(--soft)}
+  .crumbs li+li::before{content:"\203A";margin-right:8px;color:var(--soft)}
+  .crumbs a{color:var(--soft)}
+
+  article{max-width:740px;padding:12px 0 56px}
+  h1{font-family:var(--serif);font-weight:650;font-size:clamp(32px,4.6vw,46px);line-height:1.1;letter-spacing:-.015em;margin:18px 0 14px}
+  .meta{font-size:14px;color:var(--soft);margin:0 0 26px}
+  .answer{font-size:19px;background:#fff;border-left:5px solid var(--moss);padding:18px 22px;border-radius:0 6px 6px 0;margin:0 0 30px}
+  .answer p{margin:0}
+  article h2{font-family:var(--serif);font-weight:650;font-size:28px;line-height:1.2;margin:52px 0 12px}
+  article h3{font-size:19px;font-weight:600;line-height:1.35;margin:30px 0 8px}
+  article p,article li{max-width:68ch}
+  article ul,article ol{padding-left:22px}
+  article li{margin-bottom:6px}
+  .toc{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:16px 22px;margin:0 0 10px;font-size:15px}
+  .toc strong{display:block;margin-bottom:4px}
+  .toc ol{margin:0;padding-left:20px}
+  .toc li{margin-bottom:2px}
+
+  .tbl{overflow-x:auto;margin:20px 0 22px;border:1px solid var(--rule);border-radius:6px;background:#fff}
+  table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+  th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  th{font-weight:600;background:var(--moss-tint)}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  tr.hot td{background:var(--cut-tint)}
+  caption{caption-side:bottom;text-align:left;font-size:13px;color:var(--soft);padding:8px 12px}
+
+  pre{background:#1E2A1F;color:#EEF1E8;padding:16px 18px;border-radius:6px;overflow-x:auto;font-size:14px;line-height:1.55;margin:14px 0 20px;max-width:100%}
+  pre code{font-family:var(--mono);font-size:inherit;background:none;padding:0;color:inherit}
+  pre .c{color:#A9B8A0}
+  code{font-family:var(--mono);font-size:.88em}
+  :not(pre)>code{background:var(--moss-tint);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+
+  ul.check{list-style:none;padding:0}
+  ul.check li{position:relative;padding-left:34px;margin-bottom:10px}
+  ul.check li::before{content:"";position:absolute;left:0;top:4px;width:18px;height:18px;border:2px solid var(--moss);border-radius:3px;background:#fff}
+
+  .note{background:var(--amber-tint);border-left:5px solid var(--amber);padding:14px 20px;border-radius:0 6px 6px 0;margin:20px 0}
+  .note p{margin:0}
+  .cta{background:var(--moss-tint);border:2px solid var(--moss);border-radius:6px;padding:24px 26px;margin:44px 0}
+  .cta h2{margin:0 0 8px !important;font-size:24px !important}
+  .cta p{margin:0 0 16px}
+
+  details{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:14px 18px;margin-bottom:10px}
+  summary{font-weight:600;cursor:pointer}
+  details p{margin:10px 0 0}
+
+  .related{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0 0}
+  .related a{display:block;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:16px 18px;text-decoration:none}
+  .related a:hover{border-color:var(--moss)}
+  .related b{display:block;font-family:var(--serif);font-weight:650;font-size:18px;line-height:1.25;margin-bottom:4px}
+  .related span{font-size:14px;color:var(--soft)}
+  .sources{font-size:15px}
+  .sources li{overflow-wrap:anywhere}
+
+  .hub{max-width:780px;padding:12px 0 56px}
+  .hub .lede{font-size:19px;color:var(--soft);margin:0 0 30px;max-width:58ch}
+  .card{display:block;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:22px 24px;margin-bottom:16px;text-decoration:none}
+  .card:hover{border-color:var(--moss)}
+  .card h2{font-family:var(--serif);font-weight:650;font-size:24px;line-height:1.2;margin:0 0 6px}
+  .card p{margin:0 0 8px;color:var(--ink)}
+  .card small{color:var(--soft);font-size:14px}
+
+  footer{border-top:1px solid var(--rule);padding:30px 0 48px;color:var(--soft);font-size:14px}
+
+  @media (max-width:860px){
+    .related{grid-template-columns:1fr}
+  }
+  @media (max-width:480px){
+    body{font-size:16.5px}
+    article h2{font-size:24px}
+    .answer{font-size:17.5px;padding:16px 18px}
+    pre{font-size:13px;padding:14px}
+    th,td{padding:8px 9px}
+  }
+</style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "Article",
+ "headline": "Réduire la facture AWS d'une startup : les 10 économies les plus fréquentes",
+ "description": "Réduire la facture AWS d'une startup : dix économies fréquentes (rightsizing, NAT, gp3, Savings Plans, Graviton, logs, Kubernetes) et comment repérer chacune.",
+ "inLanguage": "fr-FR",
+ "datePublished": "2026-11-03",
+ "dateModified": "2026-11-03",
+ "author": {
+  "@type": "Person",
+  "name": "Amine",
+  "jobTitle": "Ingénieur DevOps"
+ },
+ "publisher": {
+  "@type": "Organization",
+  "name": "Émondage",
+  "url": "https://emondage.fr"
+ },
+ "mainEntityOfPage": {
+  "@type": "WebPage",
+  "@id": "https://emondage.fr/blog/reduire-facture-aws-startup/"
+ },
+ "url": "https://emondage.fr/blog/reduire-facture-aws-startup/"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Accueil",
+   "item": "https://emondage.fr/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "Guides",
+   "item": "https://emondage.fr/blog/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 3,
+   "name": "Réduire la facture AWS d'une startup",
+   "item": "https://emondage.fr/blog/reduire-facture-aws-startup/"
+  }
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "Par où commencer pour réduire sa facture AWS ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Par ce qui est sans risque : volumes et instantanés orphelins, conversion gp2 vers gp3, rétention des logs CloudWatch. Ensuite le redimensionnement et l'arrêt des environnements hors production. Les Savings Plans en dernier, une fois la consommation stabilisée."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Les Savings Plans sont-ils risqués pour une startup ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Le risque est de s'engager sur une consommation qui va baisser. Un Compute Savings Plan sur un an, dimensionné sur le plancher de consommation et non sur la moyenne, limite ce risque tout en couvrant EC2, Fargate et Lambda."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Passer de gp2 à gp3 provoque-t-il une interruption ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Non. La modification du type de volume se fait sur un volume attaché et en service, avec aws ec2 modify-volume. Vérifiez seulement que les volumes gp2 de plus de 1 To reçoivent assez d'IOPS provisionnées en gp3."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Pourquoi la NAT gateway coûte-t-elle si cher ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Parce qu'elle est facturée à l'heure et à chaque gigaoctet traité, et que le trafic vers S3, ECR ou des API externes depuis des sous-réseaux privés la traverse souvent. Un point de terminaison passerelle pour S3, gratuit, supprime une bonne part de ce trafic."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Comment réduire le coût d'un cluster Kubernetes sur AWS ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Corrigez les requests des pods à partir de la consommation réelle, laissez Karpenter ou le cluster-autoscaler retirer les nœuds devenus inutiles, utilisez Spot pour les charges sans état, et maintenez le cluster sur une version en support standard."
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="/">Émondage</a>
+  <nav aria-label="Navigation principale"><a href="/blog/" aria-current="page">Guides</a><a href="/">Audit des coûts</a><a href="/kubernetes/">Mise à niveau Kubernetes</a></nav>
+</div></header>
+
+<main class="wrap">
+<nav aria-label="Fil d'Ariane"><ol class="crumbs"><li><a href="/">Accueil</a></li><li><a href="/blog/">Guides</a></li><li aria-current="page">Réduire la facture AWS d'une startup</li></ol></nav>
+<article>
+<h1>Réduire la facture AWS d'une startup&nbsp;: les 10 économies les plus fréquentes</h1>
+<p class="meta">Par Amine, ingénieur DevOps · Mis à jour le <time datetime="2026-11-03">3 novembre 2026</time></p>
+<div class="answer"><p>Dans une startup, l'essentiel des économies AWS se trouve presque toujours dans les dix mêmes postes&nbsp;: ressources surdimensionnées, environnements hors production allumés en permanence, stockage orphelin, trafic NAT, volumes gp2, absence d'engagement, processeurs x86 par défaut, S3 sans cycle de vie, logs conservés indéfiniment et requests Kubernetes trop généreuses. Chacun se repère en quelques commandes. Les montants dépendent de votre facture&nbsp;: on ne cite ici que les ordres de grandeur publiés par AWS.</p></div>
+<nav class="toc" aria-label="Sommaire"><strong>Dans ce guide</strong><ol><li><a href="#tableau">Les dix postes en un tableau</a></li><li><a href="#ordre">Par où commencer</a></li><li><a href="#detail">Le détail, poste par poste</a></li><li><a href="#faq">Questions fréquentes</a></li></ol></nav>
+
+<h2 id="tableau">Les dix postes en un tableau</h2>
+<div class="tbl"><table>
+  <thead><tr><th>#</th><th>Poste</th><th>Comment le repérer</th><th>Ordre de grandeur publié</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Instances et bases surdimensionnées</td><td>AWS Compute Optimizer</td><td>Variable, aucun chiffre moyen fiable</td></tr>
+    <tr><td>2</td><td>Hors production allumé la nuit</td><td>Heures d'allumage par environnement</td><td>50 h sur 168 par semaine&nbsp;: −70&nbsp;% d'heures (calcul)</td></tr>
+    <tr><td>3</td><td>Volumes et instantanés orphelins</td><td>Volumes au statut <code>available</code></td><td>100&nbsp;% du coût de ces ressources</td></tr>
+    <tr><td>4</td><td>Trafic via la NAT gateway</td><td>Type d'utilisation <code>NatGateway-Bytes</code></td><td>0,045&nbsp;$ par Go traité (Ohio)</td></tr>
+    <tr><td>5</td><td>Volumes gp2</td><td>Volumes de type <code>gp2</code></td><td>−20&nbsp;% par Go en gp3</td></tr>
+    <tr><td>6</td><td>Pas de Savings Plans</td><td>Rapport de couverture Cost Explorer</td><td>Jusqu'à 66&nbsp;% à 72&nbsp;%</td></tr>
+    <tr><td>7</td><td>x86 par défaut</td><td>Familles d'instances utilisées</td><td>Jusqu'à 20&nbsp;% moins cher, 40&nbsp;% de prix/performance</td></tr>
+    <tr><td>8</td><td>S3 sans cycle de vie</td><td>Buckets sans règle de cycle de vie</td><td>Selon les classes de stockage</td></tr>
+    <tr><td>9</td><td>Logs CloudWatch sans rétention</td><td>Groupes sans <code>retentionInDays</code></td><td>Conservés indéfiniment par défaut</td></tr>
+    <tr><td>10</td><td>Requests Kubernetes trop larges</td><td>Requests comparées à la consommation réelle</td><td>Variable</td></tr>
+  </tbody>
+  <caption>Les pourcentages sont des maximums annoncés par AWS, pas des moyennes constatées.</caption>
+</table></div>
+
+<h2 id="ordre">Par où commencer</h2>
+<p>L'ordre compte. Commencez par ce qui est sans risque et immédiat&nbsp;: ressources orphelines (3), passage en gp3 (5), rétention des logs (9). Viennent ensuite les changements qui demandent une mesure&nbsp;: redimensionnement (1), arrêt des environnements hors production (2), requests Kubernetes (10), Graviton (7). Les engagements (6) viennent en dernier, une fois la base stabilisée&nbsp;: s'engager sur trois ans pour des instances que vous alliez réduire de moitié, c'est figer le gaspillage.</p>
+
+<h2 id="detail">Le détail, poste par poste</h2>
+
+<h3>1. Redimensionner les instances et les bases</h3>
+<p>AWS Compute Optimizer analyse l'utilisation des instances EC2, des groupes Auto Scaling, des volumes EBS et des fonctions Lambda, et propose un type mieux adapté.</p>
+<pre><code>aws compute-optimizer get-ec2-instance-recommendations \
+  --query "instanceRecommendations[].[instanceArn,finding,recommendationOptions[0].instanceType]" \
+  --output table</code></pre>
+<p>Deux précautions. Raisonnez sur les pics (95<sup>e</sup> centile), pas sur la moyenne. Et sans l'agent CloudWatch, Compute Optimizer ne voit pas la mémoire des instances EC2&nbsp;: une recommandation fondée sur le seul processeur peut sous-dimensionner une application gourmande en RAM.</p>
+
+<h3>2. Éteindre les environnements hors production</h3>
+<p>Une préproduction allumée 10 heures par jour, 5 jours par semaine, tourne 50 heures sur 168&nbsp;: 70&nbsp;% d'heures en moins. C'est un calcul, pas une statistique, et il ne vaut que pour les ressources facturées à l'heure. La solution Instance Scheduler on AWS arrête et redémarre EC2 et RDS selon un planning. Sur EKS, ramenez les groupes de nœuds à zéro hors horaires ou laissez Karpenter retirer les nœuds vides. Attention&nbsp;: une instance RDS arrêtée redémarre automatiquement au bout de sept jours.</p>
+
+<h3>3. Supprimer les volumes et instantanés orphelins</h3>
+<p>Un volume EBS détaché continue d'être facturé. Les instantanés aussi, longtemps après la suppression du volume ou de l'AMI qui les justifiait.</p>
+<pre><code><span class="c"># Volumes non attachés</span>
+aws ec2 describe-volumes --filters Name=status,Values=available \
+  --query "Volumes[].[VolumeId,Size,VolumeType,CreateTime]" --output table
+
+<span class="c"># Vos instantanés, du plus ancien au plus récent</span>
+aws ec2 describe-snapshots --owner-ids self \
+  --query "sort_by(Snapshots,&amp;StartTime)[].[SnapshotId,VolumeId,VolumeSize,StartTime]" \
+  --output table</code></pre>
+<p>Sur EKS, les volumes orphelins viennent souvent de PersistentVolumes en politique <code>Retain</code> dont le claim a disparu. Profitez du passage pour lister les adresses IPv4 publiques&nbsp;: AWS facture 0,005&nbsp;$ par heure chaque adresse, utilisée ou non.</p>
+
+<h3>4. Réduire le trafic via la NAT gateway</h3>
+<p>Une NAT gateway est facturée deux fois&nbsp;: à l'heure et au gigaoctet traité. AWS affiche 0,045&nbsp;$ par heure et 0,045&nbsp;$ par Go dans la région USA Est (Ohio)&nbsp;; les tarifs varient selon la région. Le piège classique&nbsp;: des nœuds en sous-réseau privé qui tirent leurs images, leurs sauvegardes ou leurs données S3 à travers la NAT. Dans Cost Explorer, regroupez par type d'utilisation et cherchez <code>NatGateway-Bytes</code>.</p>
+<p>Les points de terminaison VPC de type passerelle pour S3 et DynamoDB n'ont ni frais horaires ni frais de traitement&nbsp;: c'est la correction la plus rentable du poste. Les points de terminaison de type interface (ECR, par exemple) sont eux payants&nbsp;; comparez leur coût au volume de trafic avant de les ajouter.</p>
+
+<h3>5. Passer les volumes gp2 en gp3</h3>
+<p>Le gp3 coûte 20&nbsp;% de moins par Go que le gp2 (0,08&nbsp;$ contre 0,10&nbsp;$ par Go-mois dans l'exemple d'AWS) et inclut 3&nbsp;000 IOPS et 125 Mio/s de base, quelle que soit la taille. La conversion se fait sur le volume attaché, sans arrêt&nbsp;:</p>
+<pre><code>aws ec2 describe-volumes --filters Name=volume-type,Values=gp2 \
+  --query "Volumes[].[VolumeId,Size,Iops]" --output table
+
+aws ec2 modify-volume --volume-id vol-0123456789abcdef0 --volume-type gp3</code></pre>
+<p>Un gp2 de plus de 1 To dépasse 3&nbsp;000 IOPS de base&nbsp;: provisionnez l'équivalent en gp3 pour ne rien perdre. Sur Kubernetes, créez une StorageClass avec le pilote EBS CSI et le paramètre <code>type: gp3</code>, et faites-en la classe par défaut, sinon les nouveaux volumes continueront en gp2.</p>
+
+<h3>6. Savings Plans, instances réservées et Spot</h3>
+<p>Selon AWS, les Compute Savings Plans réduisent jusqu'à 66&nbsp;% le prix à la demande, les EC2 Instance Savings Plans et les instances réservées standard jusqu'à 72&nbsp;%, sur un ou trois ans. Les Compute Savings Plans couvrent EC2, Fargate et Lambda sans lier à une famille d'instances&nbsp;: c'est le choix le plus souple pour une startup dont l'architecture bouge encore. Le rapport de couverture de Cost Explorer montre la part de vos heures non couverte. Engagez-vous sur votre plancher de consommation, pas sur votre moyenne.</p>
+<p>Pour ce qui supporte l'interruption (runners de CI, traitements par lots, nœuds Kubernetes sans état), les instances Spot vont jusqu'à 90&nbsp;% de remise par rapport à la demande, selon AWS.</p>
+
+<h3>7. Passer à Graviton</h3>
+<p>AWS annonce pour ses instances Graviton jusqu'à 40&nbsp;% de performances en plus pour jusqu'à 20&nbsp;% de coût en moins par rapport aux instances x86 comparables. Les services managés (RDS, ElastiCache) sont les plus simples à migrer&nbsp;: un changement de type d'instance. Pour vos conteneurs, il faut des images arm64, ou multi-architecture avec <code>docker buildx</code>, et des dépendances natives compatibles. Testez la charge réelle&nbsp;: le gain dépend de votre code.</p>
+
+<h3>8. Mettre un cycle de vie sur S3</h3>
+<p>Un bucket sans règle de cycle de vie garde tout en classe Standard, indéfiniment, y compris les anciennes versions d'objets si le versionnement est actif et les téléversements multipartie abandonnés.</p>
+<pre><code>aws s3api get-bucket-lifecycle-configuration --bucket mon-bucket</code></pre>
+<p>Une erreur <code>NoSuchLifecycleConfiguration</code> signale un bucket sans règle. Les trois règles qui reviennent le plus&nbsp;: transition vers une classe moins chère après N jours (ou S3 Intelligent-Tiering si les accès sont imprévisibles), expiration des versions non courantes, et <code>AbortIncompleteMultipartUpload</code>. S3 Storage Lens donne une vue d'ensemble des buckets et de leur croissance.</p>
+
+<h3>9. Fixer la rétention des logs CloudWatch</h3>
+<p>Par défaut, CloudWatch Logs conserve les journaux indéfiniment. Les groupes créés automatiquement par Lambda, EKS ou les agents de collecte n'ont souvent aucune rétention définie.</p>
+<pre><code><span class="c"># Groupes sans rétention, avec leur volume stocké</span>
+aws logs describe-log-groups \
+  --query "logGroups[?!retentionInDays].[logGroupName,storedBytes]" --output table
+
+<span class="c"># Fixer 30 jours sur un groupe</span>
+aws logs put-retention-policy --log-group-name /aws/eks/mon-cluster/cluster \
+  --retention-in-days 30</code></pre>
+<p>La rétention réduit le stockage&nbsp;; l'ingestion est facturée à part. Si le poste reste élevé, regardez quels journaux sont envoyés&nbsp;: logs de débogage en production, plan de contrôle EKS avec tous les types activés, sorties de conteneurs très bavardes.</p>
+
+<h3>10. Ajuster les requests Kubernetes et le bin packing</h3>
+<p>Sur Kubernetes, ce sont les <em>requests</em> qui décident du nombre de nœuds, pas la consommation réelle. Un pod qui demande 1 CPU et en utilise 0,1 réserve quand même un CPU entier.</p>
+<pre><code><span class="c"># Consommation réelle (metrics-server requis)</span>
+kubectl top pods -A --sort-by=cpu
+
+<span class="c"># Requests déclarées</span>
+kubectl get pods -A -o custom-columns=NS:.metadata.namespace,POD:.metadata.name,CPU:.spec.containers[*].resources.requests.cpu,MEM:.spec.containers[*].resources.requests.memory</code></pre>
+<p>Le Vertical Pod Autoscaler en mode recommandation (<code>updateMode: "Off"</code>) calcule des requests réalistes sans rien modifier. Une fois les requests corrigées, le regroupement des pods sur moins de nœuds suit&nbsp;: Karpenter consolide par défaut les nœuds vides ou sous-utilisés (<code>WhenEmptyOrUnderutilized</code>), le cluster-autoscaler retire les nœuds sous son seuil. Gardez des limits mémoire, et soyez prudent avec les limits CPU qui brident sans économiser.</p>
+<p>Dernier poste propre à EKS, et souvent oublié&nbsp;: un cluster sur une version ancienne paie le support étendu, six fois le tarif standard. Voir <a href="/blog/cout-support-etendu-eks/">le coût du support étendu EKS</a> et, pour en sortir, <a href="/blog/mise-a-niveau-eks-checklist/">la checklist de mise à niveau</a>.</p>
+
+<div class="cta">
+<h2>Le chiffrage, poste par poste, sur votre facture</h2>
+<p>L'audit Émondage passe ces dix postes et les autres sur trois mois de votre facture et vos clusters, avec un accès en lecture seule. Prix fixe de 990&nbsp;€&nbsp;HT, livré en 10 jours. Si les économies annuelles identifiées n'atteignent pas 1&nbsp;980&nbsp;€&nbsp;HT, l'audit est remboursé (pour une facture cloud d'au moins 3&nbsp;000&nbsp;€ par mois).</p>
+<a class="btn" href="/#contact">Demander un audit à 990&nbsp;€&nbsp;HT</a>
+</div>
+<h2 id="faq">Questions fréquentes</h2>
+<details><summary>Par où commencer pour réduire sa facture AWS&nbsp;?</summary><p>Par ce qui est sans risque&nbsp;: volumes et instantanés orphelins, conversion gp2 vers gp3, rétention des logs CloudWatch. Ensuite le redimensionnement et l'arrêt des environnements hors production. Les Savings Plans en dernier, une fois la consommation stabilisée.</p></details>
+<details><summary>Les Savings Plans sont-ils risqués pour une startup&nbsp;?</summary><p>Le risque est de s'engager sur une consommation qui va baisser. Un Compute Savings Plan sur un an, dimensionné sur le plancher de consommation et non sur la moyenne, limite ce risque tout en couvrant EC2, Fargate et Lambda.</p></details>
+<details><summary>Passer de gp2 à gp3 provoque-t-il une interruption&nbsp;?</summary><p>Non. La modification du type de volume se fait sur un volume attaché et en service, avec aws ec2 modify-volume. Vérifiez seulement que les volumes gp2 de plus de 1 To reçoivent assez d'IOPS provisionnées en gp3.</p></details>
+<details><summary>Pourquoi la NAT gateway coûte-t-elle si cher&nbsp;?</summary><p>Parce qu'elle est facturée à l'heure et à chaque gigaoctet traité, et que le trafic vers S3, ECR ou des API externes depuis des sous-réseaux privés la traverse souvent. Un point de terminaison passerelle pour S3, gratuit, supprime une bonne part de ce trafic.</p></details>
+<details><summary>Comment réduire le coût d'un cluster Kubernetes sur AWS&nbsp;?</summary><p>Corrigez les requests des pods à partir de la consommation réelle, laissez Karpenter ou le cluster-autoscaler retirer les nœuds devenus inutiles, utilisez Spot pour les charges sans état, et maintenez le cluster sur une version en support standard.</p></details>
+<h2 id="sources">Sources</h2>
+<ol class="sources"><li><a href="https://aws.amazon.com/vpc/pricing/" rel="noopener">Amazon VPC pricing</a> — AWS, NAT gateway, IPv4 publiques, points de terminaison</li><li><a href="https://docs.aws.amazon.com/savingsplans/latest/userguide/sp-ris.html" rel="noopener">Compute Savings Plans and Reserved Instances</a> — AWS, remises maximales</li><li><a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/optimize-costs-microsoft-workloads/ebs-migrate-gp2-gp3.html" rel="noopener">Migrate Amazon EBS volumes from gp2 to gp3</a> — AWS Prescriptive Guidance</li><li><a href="https://aws.amazon.com/ec2/graviton/fast-start/" rel="noopener">AWS Graviton Fast Start</a> — AWS, prix et performances annoncés</li><li><a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html" rel="noopener">Working with log groups and log streams</a> — AWS, rétention par défaut</li><li><a href="https://aws.amazon.com/ec2/spot/pricing/" rel="noopener">Amazon EC2 Spot Instances pricing</a> — AWS, remise maximale Spot</li></ol>
+<h2>À lire aussi</h2>
+<div class="related"><a href="/blog/cout-support-etendu-eks/"><b>Coût du support étendu EKS</b><span>0,10&nbsp;$ ou 0,60&nbsp;$ de l'heure&nbsp;: le calcul pour 1, 3 et 10 clusters, le calendrier de fin de support et comment désactiver la bascule.</span></a><a href="/blog/mise-a-niveau-eks-checklist/"><b>Mise à niveau EKS&nbsp;: la checklist</b><span>API dépréciées, add-ons, nœuds, PodDisruptionBudgets, une version à la fois, répétition et retour arrière.</span></a></div>
+</article>
+</main>
+
+<footer><div class="wrap">
+  <p>Émondage — <a href="/">audit des coûts cloud à prix fixe</a>, <a href="/kubernetes/">mise à niveau Kubernetes à prix fixe</a>, <a href="/blog/">guides</a>. Contact&nbsp;: amine@emondage.fr</p>
+</div></footer>
+</body>
+</html>

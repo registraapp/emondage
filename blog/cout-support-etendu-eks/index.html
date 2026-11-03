@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coût du support étendu EKS : 0,60 $/h, calcul et dates</title>
+<meta name="description" content="Support étendu EKS : 0,60 $ par cluster et par heure au lieu de 0,10 $, soit 438 $ par mois. Calcul pour 1, 3 et 10 clusters, dates 2026 et désactivation.">
+<link rel="canonical" href="https://emondage.fr/blog/cout-support-etendu-eks/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Émondage">
+<meta property="og:title" content="Coût du support étendu EKS : 0,60 $/h, calcul et dates">
+<meta property="og:description" content="Support étendu EKS : 0,60 $ par cluster et par heure au lieu de 0,10 $, soit 438 $ par mois. Calcul pour 1, 3 et 10 clusters, dates 2026 et désactivation.">
+<meta property="og:url" content="https://emondage.fr/blog/cout-support-etendu-eks/">
+<meta property="article:published_time" content="2026-11-03">
+<meta property="article:modified_time" content="2026-11-03">
+<meta property="article:author" content="Amine">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7F2; --ink:#1E2A1F; --soft:#56634F; --rule:#D3D8CB;
+    --moss:#3F6B3A; --moss-tint:#E3EBDC; --cut:#A4462B; --cut-tint:#F6E4DD; --amber:#8A6414; --amber-tint:#F5ECD3; --focus:#2C5FD9;
+    --serif:"Fraunces",Georgia,serif; --sans:"Public Sans",system-ui,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  a{color:var(--ink)}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+  header .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px;padding:24px 20px;border-bottom:1px solid var(--rule)}
+  .brand{font-family:var(--serif);font-weight:650;font-size:24px;text-decoration:none}
+  header nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+  header nav a{font-weight:500;text-decoration:none;border-bottom:2px solid transparent}
+  header nav a:hover,header nav a[aria-current]{border-bottom-color:var(--moss)}
+  .btn{display:inline-block;background:var(--moss);color:#fff;text-decoration:none;font-weight:600;padding:14px 22px;border-radius:4px;border:0;font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:#335a2f}
+
+  .crumbs{list-style:none;display:flex;flex-wrap:wrap;gap:4px 8px;padding:0;margin:28px 0 0;font-size:14px;color:var(--soft)}
+  .crumbs li+li::before{content:"\203A";margin-right:8px;color:var(--soft)}
+  .crumbs a{color:var(--soft)}
+
+  article{max-width:740px;padding:12px 0 56px}
+  h1{font-family:var(--serif);font-weight:650;font-size:clamp(32px,4.6vw,46px);line-height:1.1;letter-spacing:-.015em;margin:18px 0 14px}
+  .meta{font-size:14px;color:var(--soft);margin:0 0 26px}
+  .answer{font-size:19px;background:#fff;border-left:5px solid var(--moss);padding:18px 22px;border-radius:0 6px 6px 0;margin:0 0 30px}
+  .answer p{margin:0}
+  article h2{font-family:var(--serif);font-weight:650;font-size:28px;line-height:1.2;margin:52px 0 12px}
+  article h3{font-size:19px;font-weight:600;line-height:1.35;margin:30px 0 8px}
+  article p,article li{max-width:68ch}
+  article ul,article ol{padding-left:22px}
+  article li{margin-bottom:6px}
+  .toc{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:16px 22px;margin:0 0 10px;font-size:15px}
+  .toc strong{display:block;margin-bottom:4px}
+  .toc ol{margin:0;padding-left:20px}
+  .toc li{margin-bottom:2px}
+
+  .tbl{overflow-x:auto;margin:20px 0 22px;border:1px solid var(--rule);border-radius:6px;background:#fff}
+  table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+  th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  th{font-weight:600;background:var(--moss-tint)}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  tr.hot td{background:var(--cut-tint)}
+  caption{caption-side:bottom;text-align:left;font-size:13px;color:var(--soft);padding:8px 12px}
+
+  pre{background:#1E2A1F;color:#EEF1E8;padding:16px 18px;border-radius:6px;overflow-x:auto;font-size:14px;line-height:1.55;margin:14px 0 20px;max-width:100%}
+  pre code{font-family:var(--mono);font-size:inherit;background:none;padding:0;color:inherit}
+  pre .c{color:#A9B8A0}
+  code{font-family:var(--mono);font-size:.88em}
+  :not(pre)>code{background:var(--moss-tint);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+
+  ul.check{list-style:none;padding:0}
+  ul.check li{position:relative;padding-left:34px;margin-bottom:10px}
+  ul.check li::before{content:"";position:absolute;left:0;top:4px;width:18px;height:18px;border:2px solid var(--moss);border-radius:3px;background:#fff}
+
+  .note{background:var(--amber-tint);border-left:5px solid var(--amber);padding:14px 20px;border-radius:0 6px 6px 0;margin:20px 0}
+  .note p{margin:0}
+  .cta{background:var(--moss-tint);border:2px solid var(--moss);border-radius:6px;padding:24px 26px;margin:44px 0}
+  .cta h2{margin:0 0 8px !important;font-size:24px !important}
+  .cta p{margin:0 0 16px}
+
+  details{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:14px 18px;margin-bottom:10px}
+  summary{font-weight:600;cursor:pointer}
+  details p{margin:10px 0 0}
+
+  .related{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0 0}
+  .related a{display:block;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:16px 18px;text-decoration:none}
+  .related a:hover{border-color:var(--moss)}
+  .related b{display:block;font-family:var(--serif);font-weight:650;font-size:18px;line-height:1.25;margin-bottom:4px}
+  .related span{font-size:14px;color:var(--soft)}
+  .sources{font-size:15px}
+  .sources li{overflow-wrap:anywhere}
+
+  .hub{max-width:780px;padding:12px 0 56px}
+  .hub .lede{font-size:19px;color:var(--soft);margin:0 0 30px;max-width:58ch}
+  .card{display:block;background:#fff;border:1px solid var(--rule);border-radius:6px;padding:22px 24px;margin-bottom:16px;text-decoration:none}
+  .card:hover{border-color:var(--moss)}
+  .card h2{font-family:var(--serif);font-weight:650;font-size:24px;line-height:1.2;margin:0 0 6px}
+  .card p{margin:0 0 8px;color:var(--ink)}
+  .card small{color:var(--soft);font-size:14px}
+
+  footer{border-top:1px solid var(--rule);padding:30px 0 48px;color:var(--soft);font-size:14px}
+
+  @media (max-width:860px){
+    .related{grid-template-columns:1fr}
+  }
+  @media (max-width:480px){
+    body{font-size:16.5px}
+    article h2{font-size:24px}
+    .answer{font-size:17.5px;padding:16px 18px}
+    pre{font-size:13px;padding:14px}
+    th,td{padding:8px 9px}
+  }
+</style>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "Article",
+ "headline": "Support étendu EKS : combien coûte un cluster resté sur une ancienne version",
+ "description": "Support étendu EKS : 0,60 $ par cluster et par heure au lieu de 0,10 $, soit 438 $ par mois. Calcul pour 1, 3 et 10 clusters, dates 2026 et désactivation.",
+ "inLanguage": "fr-FR",
+ "datePublished": "2026-11-03",
+ "dateModified": "2026-11-03",
+ "author": {
+  "@type": "Person",
+  "name": "Amine",
+  "jobTitle": "Ingénieur DevOps"
+ },
+ "publisher": {
+  "@type": "Organization",
+  "name": "Émondage",
+  "url": "https://emondage.fr"
+ },
+ "mainEntityOfPage": {
+  "@type": "WebPage",
+  "@id": "https://emondage.fr/blog/cout-support-etendu-eks/"
+ },
+ "url": "https://emondage.fr/blog/cout-support-etendu-eks/"
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "BreadcrumbList",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "name": "Accueil",
+   "item": "https://emondage.fr/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "name": "Guides",
+   "item": "https://emondage.fr/blog/"
+  },
+  {
+   "@type": "ListItem",
+   "position": 3,
+   "name": "Coût du support étendu EKS",
+   "item": "https://emondage.fr/blog/cout-support-etendu-eks/"
+  }
+ ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "Combien coûte le support étendu EKS par mois ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "0,60 $ par cluster et par heure, soit environ 438 $ par mois sur une base de 730 heures, contre 73 $ en support standard. Le surcoût est de 365 $ par mois et par cluster, 4 380 $ par an."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Le support étendu EKS est-il activé par défaut ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Oui. La politique de mise à niveau de tous les clusters, nouveaux et existants, vaut EXTENDED par défaut. Un cluster qui dépasse 14 mois sur sa version passe donc au tarif étendu sans action de votre part."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Peut-on désactiver le support étendu sur un cluster qui y est déjà ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Non. La politique STANDARD ne peut être choisie que tant que le cluster est en support standard. Une fois en support étendu, la seule façon de revenir au tarif à 0,10 $ est de mettre le cluster à niveau vers une version en support standard."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Que se passe-t-il à la fin du support étendu EKS ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "AWS met à niveau le plan de contrôle vers la plus ancienne version supportée, progressivement et sans notification préalable. Les nœuds et les add-ons ne suivent pas, et ce type de mise à niveau ne peut pas être annulé par le retour arrière en 7 jours."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Quand EKS 1.31 sera-t-il mis à niveau automatiquement ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Le support étendu de la version 1.31 se termine le 26 novembre 2026. La mise à niveau automatique peut intervenir à tout moment après cette date ; AWS ne donne pas de calendrier précis."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Le support étendu augmente-t-il le prix des nœuds EC2 ?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Non. Le supplément porte sur le tarif horaire du cluster, c'est-à-dire du plan de contrôle. Les instances EC2, les volumes et le trafic sont facturés comme d'habitude."
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="/">Émondage</a>
+  <nav aria-label="Navigation principale"><a href="/blog/" aria-current="page">Guides</a><a href="/">Audit des coûts</a><a href="/kubernetes/">Mise à niveau Kubernetes</a></nav>
+</div></header>
+
+<main class="wrap">
+<nav aria-label="Fil d'Ariane"><ol class="crumbs"><li><a href="/">Accueil</a></li><li><a href="/blog/">Guides</a></li><li aria-current="page">Coût du support étendu EKS</li></ol></nav>
+<article>
+<h1>Support étendu EKS&nbsp;: combien coûte un cluster resté sur une ancienne version</h1>
+<p class="meta">Par Amine, ingénieur DevOps · Mis à jour le <time datetime="2026-11-03">3 novembre 2026</time></p>
+<div class="answer"><p>Sur Amazon EKS, un cluster en support standard coûte 0,10&nbsp;$ par heure. Quatorze mois après la sortie de sa version, il bascule automatiquement en support étendu, facturé 0,60&nbsp;$ par heure&nbsp;: environ 438&nbsp;$ par mois au lieu de 73&nbsp;$, soit 4&nbsp;380&nbsp;$ de surcoût par cluster et par an. AKS (LTS, tier Premium) et GKE (canal Extended) suivent le même modèle, au même ordre de prix.</p></div>
+<nav class="toc" aria-label="Sommaire"><strong>Dans ce guide</strong><ol><li><a href="#grille">La grille tarifaire EKS</a></li><li><a href="#exemples">Exemples chiffrés&nbsp;: 1, 3 et 10 clusters</a></li><li><a href="#calendrier">Le calendrier EKS en novembre 2026</a></li><li><a href="#verifier">Vérifier l'état de vos clusters</a></li><li><a href="#desactiver">Désactiver le support étendu</a></li><li><a href="#aks-gke">Le même modèle sur AKS et GKE</a></li><li><a href="#faq">Questions fréquentes</a></li></ol></nav>
+
+<h2 id="grille">Standard ou étendu&nbsp;: ce que dit la grille tarifaire EKS</h2>
+<p>EKS facture le plan de contrôle à l'heure et par cluster, indépendamment du nombre de nœuds. Le tarif dépend uniquement de la position de la version Kubernetes dans son cycle de vie&nbsp;:</p>
+<ul>
+  <li><strong>support standard</strong>&nbsp;: les 14 premiers mois après la sortie de la version sur EKS, à 0,10&nbsp;$ par cluster et par heure&nbsp;;</li>
+  <li><strong>support étendu</strong>&nbsp;: les 12 mois suivants, à 0,60&nbsp;$ par cluster et par heure (le tarif standard plus 0,50&nbsp;$)&nbsp;;</li>
+  <li><strong>au-delà</strong>&nbsp;: plus de support du tout. AWS met à niveau le plan de contrôle d'office.</li>
+</ul>
+<div class="tbl"><table>
+  <thead><tr><th>Niveau de support</th><th class="n">Prix horaire</th><th class="n">Par mois (730 h)</th><th class="n">Par an (8&nbsp;760 h)</th></tr></thead>
+  <tbody>
+    <tr><td>Standard</td><td class="n">0,10&nbsp;$</td><td class="n">73&nbsp;$</td><td class="n">876&nbsp;$</td></tr>
+    <tr class="hot"><td>Étendu</td><td class="n">0,60&nbsp;$</td><td class="n">438&nbsp;$</td><td class="n">5&nbsp;256&nbsp;$</td></tr>
+    <tr><td>Surcoût du support étendu</td><td class="n">0,50&nbsp;$</td><td class="n">365&nbsp;$</td><td class="n">4&nbsp;380&nbsp;$</td></tr>
+  </tbody>
+  <caption>Tarifs publics par cluster, hors taxes et hors remises négociées. Les nœuds EC2 sont facturés à part, sans changement.</caption>
+</table></div>
+<p>Trois détails comptent. D'abord, le support étendu est <strong>activé par défaut</strong> sur tous les clusters, nouveaux comme existants&nbsp;: personne n'a à cocher quoi que ce soit pour payer six fois plus. Ensuite, la facturation au tarif étendu démarre au début du jour (UTC) de la fin du support standard. Enfin, ce que vous achetez est réel&nbsp;: AWS continue de publier les correctifs de sécurité du plan de contrôle, ceux des add-ons VPC CNI, kube-proxy et CoreDNS, et les AMI optimisées EKS pour ces versions. C'est une assurance utile pendant une migration, pas un état durable.</p>
+
+<h2 id="exemples">Exemples chiffrés&nbsp;: 1, 3 et 10 clusters</h2>
+<p>Le calcul est linéaire&nbsp;: 8&nbsp;760 heures par an, multipliées par le tarif horaire et par le nombre de clusters. Une startup qui a un cluster de production, un de préproduction et un d'outillage, tous créés le même mois et jamais mis à niveau, se trouve dans la deuxième ligne.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Clusters concernés</th><th class="n">Coût annuel en standard</th><th class="n">Coût annuel en étendu</th><th class="n">Surcoût annuel</th></tr></thead>
+  <tbody>
+    <tr><td>1 cluster</td><td class="n">876&nbsp;$</td><td class="n">5&nbsp;256&nbsp;$</td><td class="n">4&nbsp;380&nbsp;$</td></tr>
+    <tr><td>3 clusters</td><td class="n">2&nbsp;628&nbsp;$</td><td class="n">15&nbsp;768&nbsp;$</td><td class="n">13&nbsp;140&nbsp;$</td></tr>
+    <tr><td>10 clusters</td><td class="n">8&nbsp;760&nbsp;$</td><td class="n">52&nbsp;560&nbsp;$</td><td class="n">43&nbsp;800&nbsp;$</td></tr>
+  </tbody>
+  <caption>Une année complète passée en support étendu, au tarif public en dollars.</caption>
+</table></div>
+<p>Sur un seul cluster, le surcoût annuel dépasse déjà le prix d'un sprint de mise à niveau. Et il ne s'arrête pas avec la mise à niveau forcée&nbsp;: si le cluster atterrit sur une version elle-même en support étendu, la facturation à 0,60&nbsp;$ continue.</p>
+
+<h2 id="calendrier">Le calendrier EKS à connaître en novembre 2026</h2>
+<p>Dates officielles du calendrier de versions EKS, en UTC, au 3 novembre 2026&nbsp;:</p>
+<div class="tbl"><table>
+  <thead><tr><th>Version</th><th>Fin du support standard</th><th>Fin du support étendu</th><th>État au 3 novembre 2026</th></tr></thead>
+  <tbody>
+    <tr class="hot"><td>1.31</td><td>26 nov. 2025</td><td>26 nov. 2026</td><td>Étendu&nbsp;; fin dans 23 jours, puis mise à niveau automatique</td></tr>
+    <tr><td>1.32</td><td>23 mars 2026</td><td>23 mars 2027</td><td>Étendu (0,60&nbsp;$/h)</td></tr>
+    <tr><td>1.33</td><td>29 juil. 2026</td><td>29 juil. 2027</td><td>Étendu (0,60&nbsp;$/h)</td></tr>
+    <tr><td>1.34</td><td>2 déc. 2026</td><td>2 déc. 2027</td><td>Standard&nbsp;; bascule en étendu dans 29 jours</td></tr>
+    <tr><td>1.35</td><td>27 mars 2027</td><td>27 mars 2028</td><td>Standard</td></tr>
+    <tr><td>1.36</td><td>2 août 2027</td><td>2 août 2028</td><td>Standard</td></tr>
+    <tr><td>1.37</td><td>1<sup>er</sup> déc. 2027</td><td>1<sup>er</sup> déc. 2028</td><td>Standard</td></tr>
+  </tbody>
+</table></div>
+<p>Pour un cluster en 1.31, la situation est la plus serrée. Après le 26 novembre 2026, AWS met à niveau le plan de contrôle vers la plus ancienne version encore supportée, de façon progressive et <strong>sans préavis ni date précise</strong>. La documentation est explicite&nbsp;: seul le plan de contrôle est mis à niveau. Les groupes de nœuds managés et les nœuds autogérés restent sur l'ancienne version, et les add-ons sont à mettre à jour à la main. Un cluster mis à niveau d'office à la fin du support étendu ne peut pas non plus profiter du retour arrière en 7 jours qu'EKS propose depuis l'été 2026.</p>
+<p>Atterrir en 1.32 ne règle rien côté facture&nbsp;: cette version est elle-même en support étendu jusqu'en mars 2027. Pour sortir du tarif à 0,60&nbsp;$, il faut viser 1.34 au minimum, et 1.35 si vous ne voulez pas recommencer en décembre. Le chemin et ses pièges sont détaillés dans notre <a href="/blog/mise-a-niveau-eks-checklist/">checklist de mise à niveau EKS</a>.</p>
+
+<h2 id="verifier">Vérifier l'état de vos clusters</h2>
+<h3>En ligne de commande</h3>
+<p>Version et politique de support d'un cluster&nbsp;:</p>
+<pre><code>aws eks describe-cluster --name mon-cluster \
+  --query "cluster.{version:version,support:upgradePolicy.supportType}"</code></pre>
+<p>Tous les clusters d'une région, en une passe (à répéter pour chaque région utilisée, <code>list-clusters</code> étant régional)&nbsp;:</p>
+<pre><code>for c in $(aws eks list-clusters --query "clusters[]" --output text); do
+  aws eks describe-cluster --name "$c" \
+    --query "cluster.[name,version,upgradePolicy.supportType]" --output text
+done</code></pre>
+<p>Les dates de fin de support, directement depuis l'API plutôt que de mémoire&nbsp;:</p>
+<pre><code>aws eks describe-cluster-versions \
+  --query "clusterVersions[].[clusterVersion,status,endOfStandardSupportDate,endOfExtendedSupportDate]" \
+  --output table</code></pre>
+<p>Un cluster dont la version a le statut <code>EXTENDED_SUPPORT</code> et la politique <code>EXTENDED</code> paie le tarif à 0,60&nbsp;$.</p>
+<h3>Dans la console et sur la facture</h3>
+<p>Dans la console EKS, la page de chaque cluster affiche sa version&nbsp;; l'onglet <em>Configuration</em>, rubrique <em>Kubernetes version settings</em>, indique si la politique est <em>Standard support</em> ou <em>Extended support</em>. Côté facture, filtrez Cost Explorer sur le service EKS et regroupez par type d'utilisation&nbsp;: le support étendu apparaît sur une ligne distincte, dont le libellé se termine par <code>AmazonEKS-Hours:extendedSupport</code> (précédé du code de région). Ce libellé est celui que l'on relève dans les exports de coûts&nbsp;; il n'est pas documenté sur la page de tarifs, vérifiez-le dans votre propre export.</p>
+
+<h2 id="desactiver">Désactiver le support étendu&nbsp;: <code>supportType=STANDARD</code></h2>
+<p>AWS permet de refuser le support étendu cluster par cluster, en changeant sa politique de mise à niveau&nbsp;:</p>
+<pre><code>aws eks update-cluster-config \
+  --name mon-cluster \
+  --upgrade-policy supportType=STANDARD</code></pre>
+<p>Dans la console&nbsp;: <em>Configuration</em>, <em>Manage</em>, <em>Kubernetes version settings</em>, puis <em>Standard support</em>. Avant de le faire, mesurez les conséquences&nbsp;:</p>
+<ul>
+  <li><strong>Ce n'est possible qu'en support standard.</strong> Un cluster déjà entré en support étendu ne peut plus en sortir de cette façon. Pour les clusters en 1.31, 1.32 et 1.33, la seule issue est la mise à niveau.</li>
+  <li><strong>La mise à niveau devient automatique à la fin du support standard.</strong> Au lieu de payer, le cluster passe d'office à la version suivante, à une date que vous ne choisissez pas.</li>
+  <li><strong>Seul le plan de contrôle bouge.</strong> Nœuds et add-ons restent en arrière jusqu'à ce que vous les mettiez à jour&nbsp;: le décalage de versions s'installe sans que personne l'ait planifié.</li>
+  <li><strong>Le retour arrière coûte.</strong> Un cluster mis à niveau d'office à la fin du support standard peut revenir à la version précédente dans les 7 jours, mais il faut d'abord repasser la politique en <code>EXTENDED</code>, ce qui relance la facturation étendue.</li>
+</ul>
+<p>Notre lecture&nbsp;: pour un cluster en 1.34, qui bascule le 2 décembre 2026, passer en <code>STANDARD</code> est un garde-fou budgétaire raisonnable si la mise à niveau est déjà planifiée avant cette date. Ce n'est pas un plan de mise à niveau, et sur un cluster de production sans répétition préalable, une bascule forcée coûte plus cher que quelques semaines à 0,60&nbsp;$.</p>
+
+<h2 id="aks-gke">Le même modèle sur AKS et GKE</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Fournisseur</th><th>Standard</th><th>Support prolongé</th><th>Mécanisme</th></tr></thead>
+  <tbody>
+    <tr><td>Amazon EKS</td><td>0,10&nbsp;$/h</td><td>0,60&nbsp;$/h</td><td>Automatique et activé par défaut, 12 mois de plus</td></tr>
+    <tr><td>Azure AKS</td><td>0,10&nbsp;$/h (tier Standard)</td><td>Tier Premium, environ 0,60&nbsp;$/h (voir ci-dessous)</td><td>LTS sur opt-in, un an de plus</td></tr>
+    <tr><td>Google GKE</td><td>0,10&nbsp;$/h</td><td>0,10&nbsp;$ + 0,50&nbsp;$ = 0,60&nbsp;$/h</td><td>Canal Extended uniquement, jusqu'à 24 mois au total</td></tr>
+  </tbody>
+</table></div>
+<h3>AKS&nbsp;: le support long terme passe par le tier Premium</h3>
+<p>Sur AKS, le support communautaire d'une version dure un an&nbsp;; le support long terme (LTS) ajoute une année, soit environ 24 mois depuis la disponibilité générale, avec uniquement des correctifs de sécurité. Le LTS exige le tier Premium et le plan <code>AKSLongTermSupport</code>&nbsp;:</p>
+<pre><code>az aks update --resource-group mon-rg --name mon-cluster \
+  --tier premium --k8s-support-plan AKSLongTermSupport --auto-upgrade-channel patch</code></pre>
+<p>Microsoft Learn ne donne pas le tarif horaire et renvoie vers la page de prix Azure, dont les montants sont chargés dynamiquement&nbsp;; nous n'avons pas pu le relire à la source. Les relevés publics indiquent environ 0,60&nbsp;$ par cluster et par heure pour Premium, contre 0,10&nbsp;$ pour Standard&nbsp;: vérifiez dans le calculateur Azure pour votre région. À la fin du LTS, AKS laisse 60 jours de grâce puis lance une mise à niveau qui ignore votre fenêtre de maintenance, ne s'arrête pas sur les API dépréciées et peut passer outre un PodDisruptionBudget. Microsoft annonce que ce comportement s'appliquera à tout cluster sur une version non supportée à partir du 1<sup>er</sup> juin 2027.</p>
+<h3>GKE&nbsp;: seul le canal Extended paie</h3>
+<p>GKE facture 0,10&nbsp;$ par cluster et par heure, et ajoute 0,50&nbsp;$ par heure aux clusters du canal Extended dont la version a dépassé la fin du support standard. Les clusters des autres canaux sont mis à niveau automatiquement avant cette échéance et ne paient donc jamais ce supplément&nbsp;; c'est le contrôle du calendrier qu'ils perdent. GKE offre par ailleurs 74,40&nbsp;$ de crédit mensuel par compte de facturation, applicable aux clusters zonaux et Autopilot.</p>
+
+<div class="cta">
+<h2>Combien vous coûtent vos versions, exactement</h2>
+<p>Le simulateur de la page Mise à niveau Kubernetes calcule le surcoût mensuel et annuel pour votre fournisseur, votre version et votre nombre de clusters, avec les dates de bascule. Gratuit, sans inscription. Si le chiffre justifie d'agir, le sprint de mise à niveau est à prix fixe&nbsp;: 1&nbsp;500, 2&nbsp;500 ou 3&nbsp;500&nbsp;€&nbsp;HT par cluster.</p>
+<a class="btn" href="/kubernetes/#simulateur">Ouvrir le simulateur</a>
+</div>
+<p>Le support étendu n'est souvent qu'une ligne parmi d'autres&nbsp;: voir aussi <a href="/blog/reduire-facture-aws-startup/">les dix économies AWS les plus fréquentes en startup</a>.</p>
+<h2 id="faq">Questions fréquentes</h2>
+<details><summary>Combien coûte le support étendu EKS par mois&nbsp;?</summary><p>0,60&nbsp;$ par cluster et par heure, soit environ 438&nbsp;$ par mois sur une base de 730 heures, contre 73&nbsp;$ en support standard. Le surcoût est de 365&nbsp;$ par mois et par cluster, 4&nbsp;380&nbsp;$ par an.</p></details>
+<details><summary>Le support étendu EKS est-il activé par défaut&nbsp;?</summary><p>Oui. La politique de mise à niveau de tous les clusters, nouveaux et existants, vaut EXTENDED par défaut. Un cluster qui dépasse 14 mois sur sa version passe donc au tarif étendu sans action de votre part.</p></details>
+<details><summary>Peut-on désactiver le support étendu sur un cluster qui y est déjà&nbsp;?</summary><p>Non. La politique STANDARD ne peut être choisie que tant que le cluster est en support standard. Une fois en support étendu, la seule façon de revenir au tarif à 0,10&nbsp;$ est de mettre le cluster à niveau vers une version en support standard.</p></details>
+<details><summary>Que se passe-t-il à la fin du support étendu EKS&nbsp;?</summary><p>AWS met à niveau le plan de contrôle vers la plus ancienne version supportée, progressivement et sans notification préalable. Les nœuds et les add-ons ne suivent pas, et ce type de mise à niveau ne peut pas être annulé par le retour arrière en 7 jours.</p></details>
+<details><summary>Quand EKS 1.31 sera-t-il mis à niveau automatiquement&nbsp;?</summary><p>Le support étendu de la version 1.31 se termine le 26 novembre 2026. La mise à niveau automatique peut intervenir à tout moment après cette date&nbsp;; AWS ne donne pas de calendrier précis.</p></details>
+<details><summary>Le support étendu augmente-t-il le prix des nœuds EC2&nbsp;?</summary><p>Non. Le supplément porte sur le tarif horaire du cluster, c'est-à-dire du plan de contrôle. Les instances EC2, les volumes et le trafic sont facturés comme d'habitude.</p></details>
+<h2 id="sources">Sources</h2>
+<ol class="sources"><li><a href="https://aws.amazon.com/eks/pricing/" rel="noopener">Amazon EKS pricing</a> — AWS, tarifs standard et étendu</li><li><a href="https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html" rel="noopener">Understand the Kubernetes version lifecycle on EKS</a> — AWS, calendrier des versions et FAQ du support étendu</li><li><a href="https://docs.aws.amazon.com/eks/latest/userguide/disable-extended-support.html" rel="noopener">Prevent increased cluster costs by disabling EKS extended support</a> — AWS, politique supportType=STANDARD</li><li><a href="https://learn.microsoft.com/en-us/azure/aks/long-term-support" rel="noopener">Long-term support for AKS versions</a> — Microsoft Learn</li><li><a href="https://cloud.google.com/kubernetes-engine/pricing" rel="noopener">Google Kubernetes Engine pricing</a> — Google Cloud, frais de gestion et support étendu</li><li><a href="https://cloud.google.com/blog/products/containers-kubernetes/announcing-gke-extended-support" rel="noopener">Announcing GKE extended support</a> — Google Cloud, durée du support étendu</li></ol>
+<h2>À lire aussi</h2>
+<div class="related"><a href="/blog/mise-a-niveau-eks-checklist/"><b>Mise à niveau EKS&nbsp;: la checklist</b><span>API dépréciées, add-ons, nœuds, PodDisruptionBudgets, une version à la fois, répétition et retour arrière.</span></a><a href="/blog/reduire-facture-aws-startup/"><b>Réduire la facture AWS d'une startup</b><span>Les dix économies les plus fréquentes et la commande pour repérer chacune.</span></a></div>
+</article>
+</main>
+
+<footer><div class="wrap">
+  <p>Émondage — <a href="/">audit des coûts cloud à prix fixe</a>, <a href="/kubernetes/">mise à niveau Kubernetes à prix fixe</a>, <a href="/blog/">guides</a>. Contact&nbsp;: amine@emondage.fr</p>
+</div></footer>
+</body>
+</html>
