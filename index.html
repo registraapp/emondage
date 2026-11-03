@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Émondage — audit de coûts cloud et Kubernetes à prix fixe</title>
-<meta name="description" content="Un audit de votre facture AWS, GCP ou Azure et de vos clusters Kubernetes, livré en 10 jours, à 990 € HT. Si les économies identifiées ne dépassent pas deux fois ce prix sur un an, l'audit est remboursé.">
+<title>Audit de coûts cloud AWS, GCP, Azure à prix fixe | Émondage</title>
+<meta name="description" content="Audit FinOps à prix fixe : 990 € HT, 10 jours, accès en lecture seule. Liste chiffrée des économies AWS, GCP, Azure et Kubernetes, remboursé sinon.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -78,7 +78,27 @@
     .offers{grid-template-columns:1fr}
     .checks{columns:1}
   }
+
+  .faq{max-width:780px}
+  .faq details{border-bottom:1px solid var(--rule);padding:14px 0}
+  .faq summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:16px}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";font-weight:400;font-size:22px;line-height:1}
+  .faq details[open] summary::after{content:"\2212"}
+  .faq details p{margin:10px 0 0;color:var(--ink-soft, var(--soft))}
 </style>
+<link rel="canonical" href="https://emondage.fr/">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="Émondage">
+<meta property="og:title" content="Audit de coûts cloud AWS, GCP, Azure à prix fixe | Émondage">
+<meta property="og:description" content="Audit FinOps à prix fixe : 990 € HT, 10 jours, accès en lecture seule. Liste chiffrée des économies AWS, GCP, Azure et Kubernetes, remboursé sinon.">
+<meta property="og:url" content="https://emondage.fr/">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://emondage.fr/#org", "name": "Émondage", "url": "https://emondage.fr/", "email": "amine@emondage.fr", "logo": "https://emondage.fr/favicon.svg", "founder": {"@type": "Person", "name": "Amine", "jobTitle": "Ingénieur DevOps"}}, {"@type": "WebPage", "@id": "https://emondage.fr/", "url": "https://emondage.fr/", "name": "Audit de coûts cloud AWS, GCP, Azure à prix fixe | Émondage", "description": "Audit FinOps à prix fixe : 990 € HT, 10 jours, accès en lecture seule. Liste chiffrée des économies AWS, GCP, Azure et Kubernetes, remboursé sinon.", "inLanguage": "fr-FR", "isPartOf": {"@type": "WebSite", "@id": "https://emondage.fr/#site", "url": "https://emondage.fr/", "name": "Émondage", "inLanguage": "fr-FR", "publisher": {"@id": "https://emondage.fr/#org"}}, "about": {"@id": "https://emondage.fr/#service"}}, {"@type": "Service", "@id": "https://emondage.fr/#service", "name": "Audit de coûts cloud et Kubernetes (FinOps)", "serviceType": "Audit FinOps", "provider": {"@id": "https://emondage.fr/#org"}, "areaServed": {"@type": "Country", "name": "France"}, "url": "https://emondage.fr/", "offers": [{"@type": "Offer", "name": "Audit de coûts cloud, 10 jours, garantie de remboursement", "price": "990", "priceCurrency": "EUR", "priceSpecification": {"@type": "UnitPriceSpecification", "price": "990", "priceCurrency": "EUR", "valueAddedTaxIncluded": false}, "url": "https://emondage.fr/#contact"}]}, {"@type": "FAQPage", "@id": "https://emondage.fr/#faq", "mainEntity": [{"@type": "Question", "name": "Combien coûte un audit de coûts cloud ?", "acceptedAnswer": {"@type": "Answer", "text": "Émondage propose un audit à prix fixe de 990 € HT, livré en 10 jours. Si les économies identifiées ne dépassent pas 1 980 € par an, l'audit est remboursé."}}, {"@type": "Question", "name": "Faut-il donner un accès administrateur au compte cloud ?", "acceptedAnswer": {"@type": "Answer", "text": "Non. L'audit se fait avec un accès en lecture seule à la facturation et aux ressources ; aucune modification n'est faite sans votre accord."}}, {"@type": "Question", "name": "Quelles économies trouve-t-on le plus souvent ?", "acceptedAnswer": {"@type": "Answer", "text": "Des instances et des nœuds Kubernetes surdimensionnés, des environnements de test allumés en permanence, des volumes et snapshots orphelins, des transferts de données coûteux et l'absence d'engagement (Savings Plans ou instances réservées)."}}, {"@type": "Question", "name": "L'audit couvre-t-il Kubernetes ?", "acceptedAnswer": {"@type": "Answer", "text": "Oui : EKS, GKE, AKS et OpenShift, avec l'analyse des requests et limits, du taux de remplissage des nœuds et des versions de cluster exposées au support étendu payant."}}]}]}</script>
 </head>
 <body>
 <header><div class="wrap">
@@ -175,6 +195,16 @@
     <h2 class="s">Remboursé si l'audit ne vaut pas deux fois son prix</h2>
     <div class="guarantee">
       <p>Si les économies annuelles identifiées dans le rapport n'atteignent pas 1 980 € HT, l'audit vous est intégralement remboursé. Cette garantie suppose une facture cloud d'au moins 3 000 € par mois ; en dessous, on vous le dit avant de commencer.</p>
+    </div>
+  </section>
+
+    <section class="faq-wrap" id="faq">
+    <h2 class="s">Questions fréquentes</h2>
+    <div class="faq">
+      <details><summary>Combien coûte un audit de coûts cloud&nbsp;?</summary><p>Émondage propose un audit à prix fixe de 990 € HT, livré en 10 jours. Si les économies identifiées ne dépassent pas 1 980 € par an, l'audit est remboursé.</p></details>
+      <details><summary>Faut-il donner un accès administrateur au compte cloud&nbsp;?</summary><p>Non. L'audit se fait avec un accès en lecture seule à la facturation et aux ressources&nbsp;; aucune modification n'est faite sans votre accord.</p></details>
+      <details><summary>Quelles économies trouve-t-on le plus souvent&nbsp;?</summary><p>Des instances et des nœuds Kubernetes surdimensionnés, des environnements de test allumés en permanence, des volumes et snapshots orphelins, des transferts de données coûteux et l'absence d'engagement (Savings Plans ou instances réservées).</p></details>
+      <details><summary>L'audit couvre-t-il Kubernetes&nbsp;?</summary><p>Oui&nbsp;: EKS, GKE, AKS et OpenShift, avec l'analyse des requests et limits, du taux de remplissage des nœuds et des versions de cluster exposées au support étendu payant.</p></details>
     </div>
   </section>
 
